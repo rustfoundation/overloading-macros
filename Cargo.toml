@@ -1,0 +1,30 @@
+[workspace]
+resolver = "3"
+members = [
+    "splat-overload",
+]
+default-members = [
+    "splat-overload",
+]
+
+[workspace.package]
+version = "0.0.0"
+authors = [
+    "teor <teor@riseup.net",
+]
+edition = "2024"
+homepage = "https://rust-lang.github.io/rust-project-goals/2026/overloading-for-ffi.html"
+keywords = [
+    "overload",
+    "C++",
+    "interop",
+]
+license = "MIT OR APACHE-2.0"
+readme = "README.md"
+repository = "https://github.com/rustfoundation/overloading-macros"
+# Requires #[splat] which was introduced just before 1.99 branched
+rust-version = "1.99"
+
+[workspace.dependencies]
+# Delete this package and replace it with the actual dependencies
+example = "1.1.0"
