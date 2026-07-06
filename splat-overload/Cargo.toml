@@ -1,0 +1,16 @@
+# Modify the workspace Cargo.toml instead of this file (if possible)
+[package]
+name = "splat-overload"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+# Delete this package and replace it with the actual dependencies
+example.workspace = true
