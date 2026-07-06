@@ -1,0 +1,90 @@
+# This workflow checks each crate builds and runs, and for lints.
+name: Check
+
+# Runs this workflow
+on:
+  # On all pull requests, regardless of target branch
+  pull_request:
+  # On PRs in the merge queue
+  merge_group:
+  # After merges to main
+  push:
+    branches:
+      - main
+  # When a developer asks for a manual workflow run
+  workflow_dispatch:
+
+jobs:
+  build-rust:
+    name: 1. Build Rust crates
+    runs-on: ubuntu-latest
+    # Actions are pinned to a commit to prevent supply-chain attacks
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build each Rust crate
+        run: cargo build --workspace --all-targets --all-features
+
+  test-rust:
+    name: 2. Test Rust crates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Test each Rust crate
+        run: cargo test --workspace --all-targets --all-features
+
+  run:
+    name: 3. Run default Rust crate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run default Rust crate
+        run: # cargo run --all-features --bin-name TODO
+
+  clippy-rust:
+    name: 4. Clippy lints on Rust crates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run clippy on Rust crates
+        run: cargo clippy --workspace --all-targets --all-features -- --deny warnings
+
+  doc-rust:
+    name: 5. Doc lints on Rust crates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run doc checks on Rust crates
+        run: cargo doc --workspace --all-features
+
+  fmt-rust:
+    name: 6. Code format on Rust crates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run rustfmt checks on crates
+        run: cargo fmt --all -- --check
+
+  all:
+    name: All checks
+    # Always run this job, even if earlier steps were skipped (or failed):
+    # <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks#handling-skipped-but-required-checks>
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs:
+      - build-rust
+      - test-rust
+      - run
+      - clippy-rust
+      - doc-rust
+      - fmt-rust
+    steps:
+      - name: Fail if any other job failed
+        # Every job status needs to be checked here, because `always()` stops failures from propagating automatically
+        run: |
+          echo "Checking other jobs..."
+          [[ "${{ needs.build-rust.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.test-rust.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.run.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.clippy-rust.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.doc-rust.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.fmt-rust.result }}" == "success" ]] || exit 1
