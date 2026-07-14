@@ -26,5 +26,7 @@ repository = "https://github.com/rustfoundation/overloading-macros"
 rust-version = "1.99"
 
 [workspace.dependencies]
-# Delete this package and replace it with the actual dependencies
-example = "1.1.0"
+
+syn = { version = "2.0", features = ["full"] }
+quote = "1.0"
+proc-macro2 = "1.0"
