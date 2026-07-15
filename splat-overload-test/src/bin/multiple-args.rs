@@ -1,6 +1,6 @@
 #![feature(splat)]
 #![feature(tuple_trait)]
-#![allow(incomplete_features)]
+#![allow(incomplete_features, clippy::approx_constant)]
 
 use splat_overload::overload;
 
