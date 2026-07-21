@@ -13,3 +13,17 @@ cd overloading-macros
 rustup override set nightly
 cargo build
 ```
+
+## Running Examples
+
+Run individual example binaries with:
+
+```sh
+cargo run --bin <filename>
+```
+
+For example:
+
+```sh
+cargo run --bin multiple-args
+```
