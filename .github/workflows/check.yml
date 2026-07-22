@@ -50,8 +50,10 @@ jobs:
         with:
           toolchain: nightly
           components: cargo,clippy,rustfmt
-      - name: Run default Rust crate
-        run: # cargo run --all-features --bin-name TODO
+      - name: Run example binaries
+        run: |
+          cargo run --all-features --bin multiple-args
+          cargo run --all-features --bin multiple-mixed-args
 
   clippy-rust:
     name: 4. Clippy lints on Rust crates
