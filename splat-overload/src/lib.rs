@@ -64,9 +64,23 @@ pub fn overload(input: TokenStream) -> TokenStream {
                 arg_indices.push(quote! { self.#index });
             }
         }
+
+        let output_ty = match &func.sig.output {
+            syn::ReturnType::Default => quote! { () },
+            syn::ReturnType::Type(_, ty) => quote! { #ty },
+        };
+
+        //Check if the argument is zero
+        let tuple_ty = if arg_types.is_empty() {
+            quote! { () }
+        } else {
+            quote! { (#(#arg_types),*,) }
+        };
+
         impls.push(quote! {
-            impl #trait_name for (#(#arg_types),*,) {
-                fn call(self) {
+            impl #trait_name for #tuple_ty {
+                type Output = #output_ty;
+                fn call(self) -> Self::Output{
                     #(let #arg_names = #arg_indices;)*
                     #block
                 }
@@ -75,12 +89,13 @@ pub fn overload(input: TokenStream) -> TokenStream {
     }
     let generated = quote! {
         trait #trait_name: std::marker::Tuple {
-            fn call(self);
+            type Output;
+            fn call(self) -> Self::Output;
         }
 
         #(#impls)*
 
-        fn #fn_name<T: #trait_name>(#[splat] args: T) {
+        fn #fn_name<T: #trait_name>(#[splat] args: T) -> T::Output{
             args.call()
         }
     };
