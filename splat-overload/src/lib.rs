@@ -70,7 +70,7 @@ pub fn overload(input: TokenStream) -> TokenStream {
             syn::ReturnType::Type(_, ty) => quote! { #ty },
         };
 
-        //Check if the argument is zero
+        // Check if there are no arguments
         let tuple_ty = if arg_types.is_empty() {
             quote! { () }
         } else {
