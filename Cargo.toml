@@ -12,6 +12,7 @@ default-members = [
 [workspace.package]
 version = "0.0.0"
 authors = [
+    "Ajay Singh <ajaykripa8736968359@gmail.com>",
     "teor <teor@riseup.net",
 ]
 edition = "2024"
