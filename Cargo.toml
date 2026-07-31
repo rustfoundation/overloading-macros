@@ -24,8 +24,10 @@ keywords = [
 license = "MIT OR APACHE-2.0"
 readme = "README.md"
 repository = "https://github.com/rustfoundation/overloading-macros"
-# Requires #[splat] which was introduced just before 1.99 branched
+# Requires #[rustc_splat] which was renamed in nightly-2026-07-31 (rust-lang/rust#159817)
+# FIXME: we can't specify nightly dates or the latest nightly here, update to 1.100 once 1.99 beta branches (20 August 2026)
 rust-version = "1.99"
+
 [workspace.dependencies]
 syn = { version = "2.0.119", features = ["full"] }
 quote = "1.0.46"
