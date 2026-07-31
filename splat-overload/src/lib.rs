@@ -95,7 +95,7 @@ pub fn overload(input: TokenStream) -> TokenStream {
 
         #(#impls)*
 
-        fn #fn_name<T: #trait_name>(#[splat] args: T) -> T::Output{
+        fn #fn_name<T: #trait_name>(#[rustc_splat] args: T) -> T::Output{
             args.call()
         }
     };
