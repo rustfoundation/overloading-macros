@@ -1,5 +1,6 @@
 [package]
 name = "splat-overload"
+description = "Experimental nightly proc-macro for overloading functions in Rust"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
