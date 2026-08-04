@@ -1,5 +1,6 @@
 [package]
 name = "splat-overload-test"
+description = "Test crate for the experimental splat-overload proc-macro"
 publish = false
 version.workspace = true
 authors.workspace = true
