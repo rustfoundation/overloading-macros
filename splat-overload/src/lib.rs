@@ -144,7 +144,7 @@ fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
 
         #(#impls)*
 
-        fn #fn_name<T: #trait_name>(#[splat] args: T) -> T::Output {
+        fn #fn_name<T: #trait_name>(#[rustc_splat] args: T) -> T::Output {
             args.call()
         }
     };
@@ -241,7 +241,7 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         impl #self_ty {
             #(#hidden_methods)*
 
-            fn #fn_name<T: #trait_name<Self>>(#receiver, #[splat] args: T) -> T::Output {
+            fn #fn_name<T: #trait_name<Self>>(#receiver, #[rustc_splat] args: T) -> T::Output {
                 args.call(self)
             }
         }
