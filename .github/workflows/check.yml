@@ -60,6 +60,13 @@ jobs:
           cargo run --all-features --bin return-values-complex
           cargo run --all-features --bin return-values-non-copy
           cargo run --all-features --bin return-values-zero-args
+          cargo run --all-features --bin methods
+          cargo run --all-features --bin methods-multiple-args
+          cargo run --all-features --bin methods-return-values
+          cargo run --all-features --bin methods-mut-self
+          cargo run --all-features --bin methods-owned-self
+          cargo run --all-features --bin methods-complex
+          cargo run --all-features --bin methods-non-copy-arg
 
   clippy-rust:
     name: 4. Clippy lints on Rust crates
