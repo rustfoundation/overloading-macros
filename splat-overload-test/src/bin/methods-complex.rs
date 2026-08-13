@@ -30,8 +30,8 @@ fn main() {
     assert!(v.check());
     println!("zero-arg check: {}", v.check());
 
-    assert_eq!(v.check(-5i32), false);
-    assert_eq!(v.check(15i32), true);
+    assert!(!v.check(-5i32), "the check must return false");
+    assert!(v.check(15i32));
     println!("one-arg checks passed");
 
     let results = v.check(5i32, 20i32);
