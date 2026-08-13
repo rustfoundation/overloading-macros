@@ -1,7 +1,7 @@
 #![feature(splat)]
 #![feature(tuple_trait)]
 #![allow(incomplete_features)]
-#![allow(unused_braces, clippy::disallowed-names)]
+#![allow(unused_braces, clippy::disallowed_names)]
 
 use splat_overload::overload;
 
