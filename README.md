@@ -1,8 +1,11 @@
 # Rust Function Overloading Macros
 
-This repository contains *experimental* macros and other code for function overloading in Rust.
+This repository is a [Rust Foundation *experiment*](https://rustfoundation.org/media/experimenting-with-function-overloading-in-rust-why-it-matters/) in ergonomic function overloading in Rust.
 
-Some of this code requires a recent nightly Rust compiler.
+The experiment uses macros to improve the ergonomics of the [`splat` Rust language experiment](https://github.com/rust-lang/rust/issues/153629).
+Technical details for the current stage of the experiment can be found [on the Inside Rust blog](https://blog.rust-lang.org/inside-rust/2026/08/19/overloading-experiment/).
+
+Most of this code requires a recent nightly Rust compiler.
 
 ## Quick Setup
 
