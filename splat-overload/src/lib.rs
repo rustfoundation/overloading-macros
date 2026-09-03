@@ -185,6 +185,12 @@ fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
     }
 
     let generated = quote! {
+        #[diagnostic::on_unimplemented(
+            message = "missing overload for arguments `{Self}`",
+            label = "the argument types `{Self}` do not match any overload",
+            note = "check for missing or extra arguments, and check argument types",
+            note = "consider adding a new overload in the overload! {{ ... }} block",
+        )]
         trait #trait_name: std::marker::Tuple {
             type Output;
             fn call(self) -> Self::Output;
