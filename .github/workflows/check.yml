@@ -42,7 +42,7 @@ jobs:
         run: cargo test --workspace --all-targets --all-features
 
   run:
-    name: 3. Run default Rust crate
+    name: 3. Run Rust example binaries
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -50,9 +50,10 @@ jobs:
         with:
           toolchain: nightly
           components: cargo,clippy,rustfmt
-      - name: Run example binaries
+      - name: Run Rust example binaries
         # Find all test crate binaries, extract the basename (no directories or extensions),
-        # then run them one at a time with cargo
+        # then run them one at a time with cargo.
+        # There is no default-run binary set in Cargo.toml.
         run: |
           find splat-overload-test/src/bin -name "*.rs" | \
               sed 's|.*/\([^/]*\).rs|\1|g' | \
