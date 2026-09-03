@@ -2,11 +2,14 @@
 resolver = "3"
 members = [
     "splat-overload",
-    "splat-overload-test"
+    "splat-overload-test",
+    "splat-overload-diagnostics",
 ]
 default-members = [
     "splat-overload",
-    "splat-overload-test"
+    "splat-overload-test",
+    # Excluded from default members because it deliberately fails compilation
+    #"splat-overload-diagnostics",
 ]
 
 [workspace.package]
