@@ -1,9 +1,12 @@
-error[E0277]: the trait bound `(): FooArgs` is not satisfied
+error[E0277]: missing overload for arguments `()`
   --> splat-overload-diagnostics/src/bin/diag-functions.rs:15:5
    |
 15 |     foo();
-   |     ^^^ the trait `FooArgs` is not implemented for `()`
+   |     ^^^ the argument types `()` do not match any overload
    |
+   = help: the trait `FooArgs` is not implemented for `()`
+   = note: check for missing or extra arguments, and check argument types
+   = note: consider adding a new overload in the overload! { ... } block
 help: the following other types implement trait `FooArgs`
   --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
    |
@@ -54,14 +57,17 @@ note: function defined here
 11 | | }
    | |_-
 
-error[E0277]: the trait bound `(_, _, _, _, _): FooArgs` is not satisfied
+error[E0277]: missing overload for arguments `(_, _, _, _, _)`
   --> splat-overload-diagnostics/src/bin/diag-functions.rs:18:9
    |
 18 |     foo(1_i32, 2_f64, true, 4_u8, 5);
-   |     --- ^^^^^ the trait `FooArgs` is not implemented for `(_, _, _, _, _)`
+   |     --- ^^^^^ the argument types `(_, _, _, _, _)` do not match any overload
    |     |
    |     required by a bound introduced by this call
    |
+   = help: the trait `FooArgs` is not implemented for `(_, _, _, _, _)`
+   = note: check for missing or extra arguments, and check argument types
+   = note: consider adding a new overload in the overload! { ... } block
 help: the following other types implement trait `FooArgs`
   --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
    |
@@ -86,12 +92,15 @@ note: required by a bound in `foo`
    | |_^ required by this bound in `foo`
    = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0277]: the trait bound `(): FooArgs` is not satisfied
+error[E0277]: missing overload for arguments `()`
   --> splat-overload-diagnostics/src/bin/diag-functions.rs:15:5
    |
 15 |     foo();
-   |     ^^^^^ the trait `FooArgs` is not implemented for `()`
+   |     ^^^^^ the argument types `()` do not match any overload
    |
+   = help: the trait `FooArgs` is not implemented for `()`
+   = note: check for missing or extra arguments, and check argument types
+   = note: consider adding a new overload in the overload! { ... } block
 help: the following other types implement trait `FooArgs`
   --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
    |
@@ -107,12 +116,15 @@ help: the following other types implement trait `FooArgs`
    |   `(i32, f64, bool, u8)`
    = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0277]: the trait bound `(i32, f64, bool, u8, {integer}): FooArgs` is not satisfied
+error[E0277]: missing overload for arguments `(i32, f64, bool, u8, {integer})`
   --> splat-overload-diagnostics/src/bin/diag-functions.rs:18:5
    |
 18 |     foo(1_i32, 2_f64, true, 4_u8, 5);
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `FooArgs` is not implemented for `(i32, f64, bool, u8, {integer})`
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the argument types `(i32, f64, bool, u8, {integer})` do not match any overload
    |
+   = help: the trait `FooArgs` is not implemented for `(i32, f64, bool, u8, {integer})`
+   = note: check for missing or extra arguments, and check argument types
+   = note: consider adding a new overload in the overload! { ... } block
 help: the following other types implement trait `FooArgs`
   --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
    |
