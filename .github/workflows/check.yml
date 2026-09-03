@@ -39,7 +39,9 @@ jobs:
           toolchain: nightly
           components: cargo,clippy,rustfmt
       - name: Test each Rust crate
-        run: cargo test --workspace --all-targets --all-features
+        run: |
+            cargo test --workspace --all-targets --all-features
+            cargo test --doc --all-features
 
   run:
     name: 3. Run Rust example binaries
