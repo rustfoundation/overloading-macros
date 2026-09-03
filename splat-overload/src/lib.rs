@@ -7,6 +7,44 @@
 //! [`splat` Rust language experiment](https://github.com/rust-lang/rust/issues/153629), by
 //! allowing functions to be declared as an overload set. This requires a recent nightly Rust
 //! compiler.
+//!
+//! # Example
+//!
+//! The macro supports methods with return values:
+//! ```rust
+//! #![feature(splat, tuple_trait)]
+//! #![allow(incomplete_features, unused_braces)]
+//! # #[macro_use] extern crate splat_overload;
+//! use splat_overload::overload;
+//! struct Calculator;
+//! overload! {
+//!     impl Calculator {
+//!         fn compute(&self, x: i32) -> i32 { x * 2 }
+//!         fn compute(&self, x: i32, y: i32) -> i32 { x + y }
+//!     }
+//! }
+//! # fn main() {
+//! let calc = Calculator;
+//! assert_eq!(calc.compute(21), 42);
+//! assert_eq!(calc.compute(10, 32), 42);
+//! # }
+//! ```
+//!
+//! And free functions:
+//! ```rust
+//! #![feature(splat, tuple_trait)]
+//! #![allow(incomplete_features, unused_braces)]
+//! # #[macro_use] extern crate splat_overload;
+//! use splat_overload::overload;
+//! overload! {
+//!     fn compute(x: i32) -> i32 { x * 2 }
+//!     fn compute(x: i32, y: i32) -> i32 { x + y }
+//! }
+//! # fn main() {
+//! assert_eq!(compute(21), 42);
+//! assert_eq!(compute(10, 32), 42);
+//! # }
+//! ```
 
 use proc_macro::TokenStream;
 use quote::quote;
