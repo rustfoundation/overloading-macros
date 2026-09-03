@@ -27,7 +27,7 @@ jobs:
           # Use the same components in every step for caching
           components: cargo,clippy,rustfmt
       - name: Build each Rust crate
-        run: cargo build --workspace --all-targets --all-features
+        run: cargo build --all-targets --all-features
 
   test-rust:
     name: 2. Test Rust crates
@@ -40,7 +40,7 @@ jobs:
           components: cargo,clippy,rustfmt
       - name: Test each Rust crate
         run: |
-            cargo test --workspace --all-targets --all-features
+            cargo test --all-targets --all-features
             cargo test --doc --all-features
 
   run:
@@ -71,7 +71,7 @@ jobs:
           toolchain: nightly
           components: cargo,clippy,rustfmt
       - name: Run clippy on Rust crates
-        run: cargo clippy --workspace --all-targets --all-features -- --deny warnings
+        run: cargo clippy --all-targets --all-features -- --deny warnings
 
   doc-rust:
     name: 5. Doc lints on Rust crates
@@ -83,7 +83,7 @@ jobs:
           toolchain: nightly
           components: cargo,clippy,rustfmt
       - name: Run doc checks on Rust crates
-        run: cargo doc --workspace --all-features
+        run: cargo doc --all-features
 
   fmt-rust:
     name: 6. Code format on Rust crates
