@@ -30,6 +30,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "splat-overload-diagnostics"
+version = "0.0.0"
+dependencies = [
+ "splat-overload",
+]
+
+[[package]]
 name = "splat-overload-test"
 version = "0.0.0"
 dependencies = [
