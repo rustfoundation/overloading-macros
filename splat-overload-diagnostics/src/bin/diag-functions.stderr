@@ -1,0 +1,133 @@
+error[E0277]: the trait bound `(): FooArgs` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:15:5
+   |
+15 |     foo();
+   |     ^^^ the trait `FooArgs` is not implemented for `()`
+   |
+help: the following other types implement trait `FooArgs`
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
+   |
+ 7 | / overload! {
+ 8 | |     fn foo(_x: i32, _y: f64) {}
+ 9 | |     fn foo(_x: bool, _y: i32, _z: f64) {}
+10 | |     fn foo(_a: i32, _b: f64, _c: bool, _d: u8) {}
+11 | | }
+   | | ^
+   | | |
+   | | `(bool, i32, f64)`
+   | |_`(i32, f64)`
+   |   `(i32, f64, bool, u8)`
+note: required by a bound in `foo`
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
+   |
+ 7 | / overload! {
+ 8 | |     fn foo(_x: i32, _y: f64) {}
+ 9 | |     fn foo(_x: bool, _y: i32, _z: f64) {}
+10 | |     fn foo(_a: i32, _b: f64, _c: bool, _d: u8) {}
+11 | | }
+   | |_^ required by this bound in `foo`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0308]: mismatched types
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:16:9
+   |
+16 |     foo("one wrong type", 2.0_f64);
+   |     --- ^^^^^^^^^^^^^^^^ expected `i32`, found `&str`
+   |     |
+   |     arguments to this function are incorrect
+   |
+help: the return type of this call is `&'static str` due to the type of the argument passed
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:16:5
+   |
+16 |     foo("one wrong type", 2.0_f64);
+   |     ^^^^----------------^^^^^^^^^^
+   |         |
+   |         this argument influences the return type of `foo`
+note: function defined here
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:8:8
+   |
+ 7 | / overload! {
+ 8 | |     fn foo(_x: i32, _y: f64) {}
+   | |        ^^^
+ 9 | |     fn foo(_x: bool, _y: i32, _z: f64) {}
+10 | |     fn foo(_a: i32, _b: f64, _c: bool, _d: u8) {}
+11 | | }
+   | |_-
+
+error[E0277]: the trait bound `(_, _, _, _, _): FooArgs` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:18:9
+   |
+18 |     foo(1_i32, 2_f64, true, 4_u8, 5);
+   |     --- ^^^^^ the trait `FooArgs` is not implemented for `(_, _, _, _, _)`
+   |     |
+   |     required by a bound introduced by this call
+   |
+help: the following other types implement trait `FooArgs`
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
+   |
+ 7 | / overload! {
+ 8 | |     fn foo(_x: i32, _y: f64) {}
+ 9 | |     fn foo(_x: bool, _y: i32, _z: f64) {}
+10 | |     fn foo(_a: i32, _b: f64, _c: bool, _d: u8) {}
+11 | | }
+   | | ^
+   | | |
+   | | `(bool, i32, f64)`
+   | |_`(i32, f64)`
+   |   `(i32, f64, bool, u8)`
+note: required by a bound in `foo`
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
+   |
+ 7 | / overload! {
+ 8 | |     fn foo(_x: i32, _y: f64) {}
+ 9 | |     fn foo(_x: bool, _y: i32, _z: f64) {}
+10 | |     fn foo(_a: i32, _b: f64, _c: bool, _d: u8) {}
+11 | | }
+   | |_^ required by this bound in `foo`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `(): FooArgs` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:15:5
+   |
+15 |     foo();
+   |     ^^^^^ the trait `FooArgs` is not implemented for `()`
+   |
+help: the following other types implement trait `FooArgs`
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
+   |
+ 7 | / overload! {
+ 8 | |     fn foo(_x: i32, _y: f64) {}
+ 9 | |     fn foo(_x: bool, _y: i32, _z: f64) {}
+10 | |     fn foo(_a: i32, _b: f64, _c: bool, _d: u8) {}
+11 | | }
+   | | ^
+   | | |
+   | | `(bool, i32, f64)`
+   | |_`(i32, f64)`
+   |   `(i32, f64, bool, u8)`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `(i32, f64, bool, u8, {integer}): FooArgs` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:18:5
+   |
+18 |     foo(1_i32, 2_f64, true, 4_u8, 5);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `FooArgs` is not implemented for `(i32, f64, bool, u8, {integer})`
+   |
+help: the following other types implement trait `FooArgs`
+  --> splat-overload-diagnostics/src/bin/diag-functions.rs:7:1
+   |
+ 7 | / overload! {
+ 8 | |     fn foo(_x: i32, _y: f64) {}
+ 9 | |     fn foo(_x: bool, _y: i32, _z: f64) {}
+10 | |     fn foo(_a: i32, _b: f64, _c: bool, _d: u8) {}
+11 | | }
+   | | ^
+   | | |
+   | | `(bool, i32, f64)`
+   | |_`(i32, f64)`
+   |   `(i32, f64, bool, u8)`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+Some errors have detailed explanations: E0277, E0308.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `splat-overload-diagnostics` (bin "diag-functions") due to 5 previous errors

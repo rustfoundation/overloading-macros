@@ -1,0 +1,97 @@
+error[E0277]: the trait bound `(): ComputeArgs<Calculator>` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:20:10
+   |
+20 |     calc.compute();
+   |          ^^^^^^^ the trait `ComputeArgs<Calculator>` is not implemented for `()`
+   |
+help: the following other types implement trait `ComputeArgs<R>`
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:10:1
+   |
+10 | / overload! {
+11 | |     impl Calculator {
+12 | |         fn compute(&self, x: i32) -> i32 { x }
+13 | |         fn compute(&self, x: i32, y: i32) -> i32 { x + y }
+14 | |     }
+15 | | }
+   | | ^
+   | | |
+   | |_`(i32, i32)`
+   |   `(i32,)`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0308]: mismatched types
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:21:18
+   |
+21 |     calc.compute("wrong type");
+   |          ------- ^^^^^^^^^^^^ expected `i32`, found `&str`
+   |          |
+   |          arguments to this method are incorrect
+   |
+help: the return type of this call is `&'static str` due to the type of the argument passed
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:21:5
+   |
+21 |     calc.compute("wrong type");
+   |     ^^^^^^^^^^^^^------------^
+   |                  |
+   |                  this argument influences the return type of `compute`
+note: method defined here
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:12:12
+   |
+10 | / overload! {
+11 | |     impl Calculator {
+12 | |         fn compute(&self, x: i32) -> i32 { x }
+   | |            ^^^^^^^
+13 | |         fn compute(&self, x: i32, y: i32) -> i32 { x + y }
+14 | |     }
+15 | | }
+   | |_-
+
+error[E0277]: the trait bound `(_, _, _): ComputeArgs<Calculator>` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:23:18
+   |
+23 |     calc.compute(1_i32, 2_i32, 3);
+   |          ------- ^^^^^ the trait `ComputeArgs<Calculator>` is not implemented for `(_, _, _)`
+   |          |
+   |          required by a bound introduced by this call
+   |
+help: the following other types implement trait `ComputeArgs<R>`
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:10:1
+   |
+10 | / overload! {
+11 | |     impl Calculator {
+12 | |         fn compute(&self, x: i32) -> i32 { x }
+13 | |         fn compute(&self, x: i32, y: i32) -> i32 { x + y }
+14 | |     }
+15 | | }
+   | | ^
+   | | |
+   | |_`(i32, i32)`
+   |   `(i32,)`
+note: required by a bound in `Calculator::compute`
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:10:1
+   |
+10 | / overload! {
+11 | |     impl Calculator {
+12 | |         fn compute(&self, x: i32) -> i32 { x }
+13 | |         fn compute(&self, x: i32, y: i32) -> i32 { x + y }
+14 | |     }
+15 | | }
+   | |_^ required by this bound in `Calculator::compute`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0308]: mismatched types
+  --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:25:18
+   |
+25 |     let a: f64 = calc.compute(1_i32);
+   |            ---   ^^^^^^^^^^^^^^^^^^^ expected `f64`, found `i32`
+   |            |
+   |            expected due to this
+   |
+help: you can convert an `i32` to an `f64`, producing the floating point representation of the integer
+   |
+25 |     let a: f64 = calc.compute(1_i32).into();
+   |                                     +++++++
+
+Some errors have detailed explanations: E0277, E0308.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `splat-overload-diagnostics` (bin "diag-method-return-values") due to 4 previous errors
