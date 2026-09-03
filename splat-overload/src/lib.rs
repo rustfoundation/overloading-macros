@@ -1,3 +1,13 @@
+//! A [Rust Foundation *experiment*](https://rustfoundation.org/media/experimenting-with-function-overloading-in-rust-why-it-matters/)
+//! in ergonomic function overloading in Rust. Technical details for the current stage of the
+//! experiment can be found
+//! [on the Inside Rust blog](https://blog.rust-lang.org/inside-rust/2026/08/19/overloading-experiment/).
+//!
+//! The `overload!` macro improves the ergonomics of the
+//! [`splat` Rust language experiment](https://github.com/rust-lang/rust/issues/153629), by
+//! allowing functions to be declared as an overload set. This requires a recent nightly Rust
+//! compiler.
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
