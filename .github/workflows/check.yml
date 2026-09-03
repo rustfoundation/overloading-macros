@@ -109,6 +109,44 @@ jobs:
       - name: Dry run publishing
         run: cargo publish --dry-run
 
+  diagnostics-rust:
+    name: 8. Diagnostics tests on Rust crates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+        with:
+          toolchain: nightly
+          # Use the same components in every step for caching
+          components: cargo,clippy,rustfmt
+      - name: Build each Rust crate
+        # To bless (update the expected diagnostics), change '/tmp' to 'splat-overload-diagnostics/src/bin',
+        # and disable color output.
+        # FIXME: turn this into a script so we can run it locally.
+        run: |
+            export CARGO_TERM_COLOR=never
+            set -o pipefail
+            TEST_NAMES=$(find splat-overload-diagnostics/src/bin -name "*.rs" | \
+                sed 's|.*/\([^/]*\).rs|\1|g' )
+            echo "testing: $TEST_NAMES"
+            for test_name in $TEST_NAMES; do
+                echo "testing: $test_name"
+                # We expect cargo to fail, so don't exit the shell when it does
+                set +e
+                # Ignore build progress, if it's cached then the built crates change
+                cargo build --all-features --package splat-overload-diagnostics --bin "$test_name" 2>&1 | \
+                    grep --invert-match -e 'Updating .* index' -e 'Compiling [^ ]* .*' \
+                    > "/tmp/$test_name.stderr"
+                CARGO_EXIT_CODE=$?
+                set -e
+                if [[ $CARGO_EXIT_CODE -ne 101 ]]; then
+                    echo "error: $test_name compilation unexpectedly returned exit code $CARGO_EXIT_CODE rather than 101"
+                    exit 1
+                fi
+                echo "comparing diagnostics for: $test_name"
+                diff --unified=5 "splat-overload-diagnostics/src/bin/$test_name.stderr" /tmp/"$test_name.stderr"
+            done
+
   all:
     name: All checks
     # Always run this job, even if earlier steps were skipped (or failed):
@@ -123,6 +161,7 @@ jobs:
       - doc-rust
       - fmt-rust
       - publish-dry-run
+      - diagnostics-rust
     steps:
       - name: Fail if any other job failed
         # Every job status needs to be checked here, because `always()` stops failures from propagating automatically
@@ -135,3 +174,4 @@ jobs:
           [[ "${{ needs.doc-rust.result }}" == "success" ]] || exit 1
           [[ "${{ needs.fmt-rust.result }}" == "success" ]] || exit 1
           [[ "${{ needs.publish-dry-run.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.diagnostics-rust.result }}" == "success" ]] || exit 1

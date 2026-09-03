@@ -9,8 +9,8 @@ struct Foo;
 
 overload! {
     impl Foo {
-        fn method(&self, x: i32) {}
-        fn method(&self, x: f64) {}
+        fn method(&self, _x: i32) {}
+        fn method(&self, _x: f64) {}
     }
 }
 

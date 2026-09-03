@@ -1,0 +1,89 @@
+error[E0277]: the trait bound `(): MethodArgs<Foo>` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-methods.rs:20:9
+   |
+20 |     foo.method();
+   |         ^^^^^^ the trait `MethodArgs<Foo>` is not implemented for `()`
+   |
+help: the following other types implement trait `MethodArgs<R>`
+  --> splat-overload-diagnostics/src/bin/diag-methods.rs:10:1
+   |
+10 | / overload! {
+11 | |     impl Foo {
+12 | |         fn method(&self, _x: i32) {}
+13 | |         fn method(&self, _x: f64) {}
+14 | |     }
+15 | | }
+   | | ^
+   | | |
+   | |_`(f64,)`
+   |   `(i32,)`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `(&str,): MethodArgs<Foo>` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-methods.rs:21:16
+   |
+21 |     foo.method("wrong type");
+   |         ------ ^^^^^^^^^^^^ the trait `MethodArgs<Foo>` is not implemented for `(&str,)`
+   |         |
+   |         required by a bound introduced by this call
+   |
+help: the following other types implement trait `MethodArgs<R>`
+  --> splat-overload-diagnostics/src/bin/diag-methods.rs:10:1
+   |
+10 | / overload! {
+11 | |     impl Foo {
+12 | |         fn method(&self, _x: i32) {}
+13 | |         fn method(&self, _x: f64) {}
+14 | |     }
+15 | | }
+   | | ^
+   | | |
+   | |_`(f64,)`
+   |   `(i32,)`
+note: required by a bound in `Foo::method`
+  --> splat-overload-diagnostics/src/bin/diag-methods.rs:10:1
+   |
+10 | / overload! {
+11 | |     impl Foo {
+12 | |         fn method(&self, _x: i32) {}
+13 | |         fn method(&self, _x: f64) {}
+14 | |     }
+15 | | }
+   | |_^ required by this bound in `Foo::method`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `(_, _): MethodArgs<Foo>` is not satisfied
+  --> splat-overload-diagnostics/src/bin/diag-methods.rs:23:16
+   |
+23 |     foo.method(1_i32, 2);
+   |         ------ ^^^^^ the trait `MethodArgs<Foo>` is not implemented for `(_, _)`
+   |         |
+   |         required by a bound introduced by this call
+   |
+help: the following other types implement trait `MethodArgs<R>`
+  --> splat-overload-diagnostics/src/bin/diag-methods.rs:10:1
+   |
+10 | / overload! {
+11 | |     impl Foo {
+12 | |         fn method(&self, _x: i32) {}
+13 | |         fn method(&self, _x: f64) {}
+14 | |     }
+15 | | }
+   | | ^
+   | | |
+   | |_`(f64,)`
+   |   `(i32,)`
+note: required by a bound in `Foo::method`
+  --> splat-overload-diagnostics/src/bin/diag-methods.rs:10:1
+   |
+10 | / overload! {
+11 | |     impl Foo {
+12 | |         fn method(&self, _x: i32) {}
+13 | |         fn method(&self, _x: f64) {}
+14 | |     }
+15 | | }
+   | |_^ required by this bound in `Foo::method`
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `splat-overload-diagnostics` (bin "diag-methods") due to 3 previous errors
