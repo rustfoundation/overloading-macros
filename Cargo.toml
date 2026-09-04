@@ -26,7 +26,6 @@ keywords = [
     "interop",
 ]
 license = "MIT OR APACHE-2.0"
-readme = "README.md"
 repository = "https://github.com/rustfoundation/overloading-macros"
 # Requires nightly `#[rustc_splat]` which was renamed in nightly-2026-07-31 (rust-lang/rust#159817)
 # We can't specify nightly here, because version suffixes aren't supported.
