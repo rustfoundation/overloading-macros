@@ -4,6 +4,7 @@ members = [
     "splat-overload",
     "splat-overload-test",
     "splat-overload-diagnostics",
+    "z-test-publish",
 ]
 default-members = [
     "splat-overload",
