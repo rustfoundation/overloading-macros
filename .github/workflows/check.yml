@@ -135,7 +135,7 @@ jobs:
                 set +e
                 # Ignore build progress, if it's cached then the built crates change
                 cargo build --all-features --package splat-overload-diagnostics --bin "$test_name" 2>&1 | \
-                    grep --invert-match -e 'Updating .* index' -e 'Compiling [^ ]* .*' \
+                    grep --invert-match -e 'Updating .* index' -e 'Downloading .*' -e 'Downloaded .*' -e 'Compiling [^ ]* .*' \
                     > "/tmp/$test_name.stderr"
                 CARGO_EXIT_CODE=$?
                 set -e
