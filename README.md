@@ -7,7 +7,60 @@ Technical details for the current stage of the experiment can be found [on the I
 
 Most of this code requires a recent nightly Rust compiler.
 
-## Quick Setup
+## Macro Setup
+
+Install a recent version of the nightly Rust compiler, and use it to build your project.
+Add this `overloading-macros` crate as a dependency.
+
+```sh
+rustup update nightly
+cd your-project-name
+rustup override set nightly
+cargo add overloading-macros ||  cargo add --git https://github.com/rustfoundation/overloading-macros overloading-macros
+```
+
+Then use the macro to add overloading to your functions or methods.
+
+<!-- This example should be kept in sync with splat-overload-test/src/bin/readme-example.rs -->
+```rust
+#![feature(splat, tuple_trait)]
+#![allow(incomplete_features, unused_braces)]
+
+use splat_overload::overload;
+
+// Functions can be overloaded
+overload! {
+    fn show(num: i32) { println!("num: {}", num); }
+    fn show(nums: Vec<i32>) { println!("nums: {:?}", nums); }
+}
+
+struct Example;
+
+// So can methods and return values
+overload! {
+    impl Example {
+        fn tell(&self, num: i32) -> i32 { println!("num: {}", num); return num; }
+        fn tell(&self, nums: Vec<i32>) -> Vec<i32> { println!("nums: {:?}", nums); return nums; }
+    }
+}
+
+fn main() {
+    show(42);
+    show(vec![42, 43, 44]);
+
+    let e = Example;
+    let _num = e.tell(42);
+    let _nums = e.tell(vec![42, 43, 44]);
+}
+```
+
+PRs are welcome, particularly to:
+
+- improve the macro's ergonomics
+- document how to import overloads into other modules
+- fix bugs in this experimental macro
+
+## Macro Development Setup
 
 ```sh
 rustup update nightly
