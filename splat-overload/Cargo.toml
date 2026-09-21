@@ -10,6 +10,14 @@ license.workspace = true
 readme.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+include = [
+    "../COPYRIGHT",
+    "../LICENSE-APACHE",
+    "../LICENSE-MIT",
+    "../LICENSE-documentation",
+    "../rust-toolchain.toml",
+    "src/**",
+]
 
 [lib]
 proc-macro = true
