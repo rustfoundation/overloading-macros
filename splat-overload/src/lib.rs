@@ -56,6 +56,7 @@ use syn::{
 
 enum OverloadInput {
     Functions(Vec<ItemFn>),
+    /// Methods or associated functions
     Methods {
         self_ty: syn::Ident,
         functions: Vec<ItemFn>,
@@ -206,45 +207,71 @@ fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
     generated.into()
 }
 
+/// The kind of receiver for a method or associated function.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum ReceiverKind {
+    /// self
+    Owned,
+    /// &self
+    Ref,
+    /// &mut self
+    RefMut,
+    /// An associated function with no receiver.
+    NoReceiver,
+}
+
+impl ReceiverKind {
+    /// Returns the receiver kind for a function argument.
+    /// This should be the first argument of the function, which is the only argument that can be
+    /// a receiver.
+    /// FIXME: take an iterator here, so we can ensure it's the first argument.
+    fn from_args(r: &Option<&FnArg>) -> Self {
+        match r {
+            Some(FnArg::Receiver(r)) => {
+                if r.reference.is_some() {
+                    if r.mutability.is_some() {
+                        Self::RefMut
+                    } else {
+                        Self::Ref
+                    }
+                } else {
+                    Self::Owned
+                }
+            }
+            None | Some(FnArg::Typed(_)) => Self::NoReceiver,
+        }
+    }
+}
+
 fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream {
     let fn_name = &functions[0].sig.ident;
     let trait_name = trait_name_for(fn_name);
 
-    let (is_ref, is_mut) = {
-        let first_receiver = match functions[0].sig.inputs.first() {
-            Some(FnArg::Receiver(r)) => r,
-            _ => panic!("overload! methods must take self"),
-        };
+    let receiver_kind = {
+        let first_receiver = ReceiverKind::from_args(&functions[0].sig.inputs.first());
         for func in &functions {
-            match func.sig.inputs.first() {
-                Some(FnArg::Receiver(r)) => {
-                    let same = r.reference.is_some() == first_receiver.reference.is_some()
-                        && r.mutability.is_some() == first_receiver.mutability.is_some();
-                    if !same {
-                        panic!(
-                            "all overloads must use the same receiver kind (&self, &mut self, or self)"
-                        );
-                    }
-                }
-                _ => panic!("overload! methods must take self"),
+            let next_receiver = ReceiverKind::from_args(&func.sig.inputs.first());
+            if next_receiver != first_receiver {
+                panic!(
+                    "all overloads must use the same receiver kind (&self, &mut self, self, or no receiver)"
+                );
             }
         }
-        (
-            first_receiver.reference.is_some(),
-            first_receiver.mutability.is_some(),
-        )
+        first_receiver
     };
 
-    let this_generic_ty = match (is_ref, is_mut) {
-        (true, true) => quote! { &mut R },
-        (true, false) => quote! { &R },
-        (false, _) => quote! { R },
+    let this_generic_ty = match receiver_kind {
+        ReceiverKind::RefMut => quote! { , this: &mut R },
+        ReceiverKind::Ref => quote! { , this: &R },
+        ReceiverKind::Owned => quote! { , this: R },
+        ReceiverKind::NoReceiver => quote! {},
     };
 
-    let this_concrete_ty = match (is_ref, is_mut) {
-        (true, true) => quote! { &mut #self_ty },
-        (true, false) => quote! { &#self_ty },
-        (false, _) => quote! { #self_ty },
+    let this_concrete_ty = match receiver_kind {
+        ReceiverKind::RefMut => quote! { , this: &mut #self_ty },
+        ReceiverKind::Ref => quote! { , this: &#self_ty },
+        ReceiverKind::Owned => quote! { , this: #self_ty },
+        ReceiverKind::NoReceiver => quote! {},
     };
 
     let mut impls = Vec::new();
@@ -256,14 +283,17 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         let tuple_ty = tuple_ty_for(&arg_types);
         let block = &func.block;
         let func_receiver = match func.sig.inputs.first() {
-            Some(FnArg::Receiver(r)) => quote! { #r },
-            _ => panic!("overload! methods must take self"),
+            Some(FnArg::Receiver(r)) => quote! { #r, },
+            _ => quote! {},
         };
-
+        let caller_receiver = match receiver_kind {
+            ReceiverKind::RefMut | ReceiverKind::Ref | ReceiverKind::Owned => quote! { this. },
+            ReceiverKind::NoReceiver => quote! { #self_ty:: },
+        };
         let hidden_name = quote::format_ident!("__{}_impl_{}", fn_name, i);
 
         hidden_methods.push(quote! {
-            fn #hidden_name(#func_receiver, #(#arg_names: #arg_types),*) -> #output_ty {
+            fn #hidden_name(#func_receiver #(#arg_names: #arg_types),*) -> #output_ty {
                 #block
             }
         });
@@ -271,23 +301,31 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         impls.push(quote! {
             impl #trait_name<#self_ty> for #tuple_ty {
                 type Output = #output_ty;
-                fn call(self, this: #this_concrete_ty) -> Self::Output {
+                fn call(self #this_concrete_ty) -> Self::Output {
                     #(let #arg_names = #arg_indices;)*
-                    this.#hidden_name(#(#arg_names),*)
+                    #caller_receiver #hidden_name(#(#arg_names),*)
                 }
             }
         });
     }
 
-    let receiver = match functions[0].sig.inputs.first() {
-        Some(FnArg::Receiver(r)) => quote! { #r },
-        _ => unreachable!(),
+    // The receiver for the overload dispatch function, its comma, and the receiver variable passed
+    // to it (either `self` or no argument for associated functions).
+    let (receiver, receiver_comma, self_arg) = match functions[0].sig.inputs.first() {
+        Some(FnArg::Receiver(r)) => (quote! { #r }, quote! { , }, quote! { self }),
+        _ => (quote! {}, quote! {}, quote! {}),
     };
 
     let generated = quote! {
+        #[diagnostic::on_unimplemented(
+            message = "missing overload for arguments `{Self}`",
+            label = "the argument types `{Self}` do not match any overload",
+            note = "check for missing or extra arguments, and check argument types",
+            note = "consider adding a new overload in the overload! {{ ... }} block",
+        )]
         trait #trait_name<R>: std::marker::Tuple {
             type Output;
-            fn call(self, this: #this_generic_ty) -> Self::Output;
+            fn call(self #this_generic_ty) -> Self::Output;
         }
 
         #(#impls)*
@@ -295,8 +333,8 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         impl #self_ty {
             #(#hidden_methods)*
 
-            fn #fn_name<T: #trait_name<Self>>(#receiver, #[rustc_splat] args: T) -> T::Output {
-                args.call(self)
+            fn #fn_name<T: #trait_name<Self>>(#receiver #receiver_comma #[rustc_splat] args: T) -> T::Output {
+                args.call(#self_arg)
             }
         }
     };
