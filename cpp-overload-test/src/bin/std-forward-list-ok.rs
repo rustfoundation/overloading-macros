@@ -12,7 +12,6 @@ cpp! {{
 }}
 
 /// A wrapper struct to hold the returned C++ pointer.
-#[expect(dead_code, reason = "We only care about constructors here")]
 struct StdForwardList(*mut c_void);
 
 // The cpp! macro doesn't work inside the overload! macro, so we extract C++ calls into separate methods.
@@ -44,10 +43,32 @@ impl StdForwardList {
         };
         StdForwardList(list)
     }
+
+    fn const_lvalue_copy(other: &StdForwardList) -> StdForwardList {
+        let other = other.0 as *const c_void;
+        let list = unsafe {
+            cpp!([other as "const std::forward_list<int>*"] -> *mut c_void as "std::forward_list<int>*" {
+                const std::forward_list<int> other_ = *other;
+                return new std::forward_list<int>(other_);
+            })
+        };
+        StdForwardList(list)
+    }
+
+    fn rvalue_copy(other: &mut StdForwardList) -> StdForwardList {
+        let other: *mut c_void = other.0;
+        let list = unsafe {
+            cpp!([other as "std::forward_list<int>*"] -> *mut c_void as "std::forward_list<int>*" {
+                std::forward_list<int> other_ = std::move(*other);
+                return new std::forward_list<int>(other_);
+            })
+        };
+        StdForwardList(list)
+    }
 }
 
-// We ignore constructors that only differ by an allocator argument, because they're not useful
-// overloads to test.
+// We ignore constructors that only differ by an allocator argument, because they're not
+// interesting overloads to test.
 overload! {
     impl StdForwardList {
         /// Construct an empty list.
@@ -65,16 +86,29 @@ overload! {
             StdForwardList::repeat_with(value, capacity)
         }
 
+        /// Clone a list from a shared reference.
+        fn new(other: &StdForwardList) -> StdForwardList {
+            StdForwardList::const_lvalue_copy(other)
+        }
+
+        /// Clone a list from a mutable reference.
+        /// Some C++ types use this to extend temporary lifetimes or mutate list objects during
+        /// copy construction.
+        fn new(other: &mut StdForwardList) -> StdForwardList {
+            StdForwardList::rvalue_copy(other)
+        }
+
         // TODO:
         // iterator
         // range
-        // copy constructors x2
         // initializer_list
     }
 }
 
 fn main() {
-    let _default = StdForwardList::new();
+    let mut default_list = StdForwardList::new();
     let _with_capacity = StdForwardList::new(10);
     let _repeat_with = StdForwardList::new(42, 100);
+    let _ref_clone = StdForwardList::new(&default_list);
+    let _mut_clone = StdForwardList::new(&mut default_list);
 }
