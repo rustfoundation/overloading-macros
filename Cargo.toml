@@ -4,12 +4,14 @@ members = [
     "splat-overload",
     "splat-overload-test",
     "splat-overload-diagnostics",
+    "cpp-overload-test",
 ]
 default-members = [
     "splat-overload",
     "splat-overload-test",
-    # Excluded from default members because it deliberately fails compilation
+    # Excluded from default members because they deliberately fail compilation
     #"splat-overload-diagnostics",
+    #"cpp-overload-test",
 ]
 
 [workspace.package]
@@ -35,3 +37,5 @@ rust-version = "1.100"
 syn = { version = "2.0.119", features = ["full"] }
 quote = "1.0.46"
 proc-macro2 = "1.0.106"
+cpp = "0.5.11"
+cpp_build = "0.5.11"
