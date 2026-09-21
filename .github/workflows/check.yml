@@ -119,7 +119,7 @@ jobs:
           toolchain: nightly
           # Use the same components in every step for caching
           components: cargo,clippy,rustfmt
-      - name: Build each Rust crate
+      - name: Check diagnostic output
         # To bless (update the expected diagnostics), change '/tmp' to 'splat-overload-diagnostics/src/bin',
         # and disable color output.
         # FIXME: turn this into a script so we can run it locally.
