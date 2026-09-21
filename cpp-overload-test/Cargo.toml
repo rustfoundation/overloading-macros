@@ -1,0 +1,21 @@
+[package]
+name = "cpp-overload-test"
+description = "Testing typical C++ overloads with experimental Rust overloading"
+publish = false
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+build = "build.rs"
+
+[dependencies]
+splat-overload = { path = "../splat-overload" }
+cpp.workspace = true
+
+[build-dependencies]
+cpp_build.workspace = true
