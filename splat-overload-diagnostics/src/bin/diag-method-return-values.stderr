@@ -1,9 +1,12 @@
-error[E0277]: the trait bound `(): ComputeArgs<Calculator>` is not satisfied
+error[E0277]: missing overload for arguments `()`
   --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:20:10
    |
 20 |     calc.compute();
-   |          ^^^^^^^ the trait `ComputeArgs<Calculator>` is not implemented for `()`
+   |          ^^^^^^^ the argument types `()` do not match any overload
    |
+   = help: the trait `ComputeArgs<Calculator>` is not implemented for `()`
+   = note: check for missing or extra arguments, and check argument types
+   = note: consider adding a new overload in the overload! { ... } block
 help: the following other types implement trait `ComputeArgs<R>`
   --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:10:1
    |
@@ -46,14 +49,17 @@ note: method defined here
 15 | | }
    | |_-
 
-error[E0277]: the trait bound `(_, _, _): ComputeArgs<Calculator>` is not satisfied
+error[E0277]: missing overload for arguments `(_, _, _)`
   --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:23:18
    |
 23 |     calc.compute(1_i32, 2_i32, 3);
-   |          ------- ^^^^^ the trait `ComputeArgs<Calculator>` is not implemented for `(_, _, _)`
+   |          ------- ^^^^^ the argument types `(_, _, _)` do not match any overload
    |          |
    |          required by a bound introduced by this call
    |
+   = help: the trait `ComputeArgs<Calculator>` is not implemented for `(_, _, _)`
+   = note: check for missing or extra arguments, and check argument types
+   = note: consider adding a new overload in the overload! { ... } block
 help: the following other types implement trait `ComputeArgs<R>`
   --> splat-overload-diagnostics/src/bin/diag-method-return-values.rs:10:1
    |
