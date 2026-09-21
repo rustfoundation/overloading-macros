@@ -163,10 +163,48 @@ jobs:
             set -o pipefail
             TEST_NAMES=$(find cpp-overload-test/src/bin -name "*-ok.rs" | \
                 sed 's|.*/\([^/]*\).rs|\1|g' )
-            echo "testing: $TEST_NAMES"
+            echo "testing ok: $TEST_NAMES"
             for test_name in $TEST_NAMES; do
                 echo "testing ok: $test_name"
                 cargo build --all-features --package cpp-overload-test --bin "$test_name"
+            done
+
+  cpp-overload-test-fail:
+    name: 10. Must-fail C++ overloads
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+        with:
+          toolchain: nightly
+          # Use the same components in every step for caching
+          components: cargo,clippy,rustfmt
+      - name: Check C++ overload fail cases
+        # To bless (update the expected output), change '/tmp' to 'cpp-overload-test/src/bin',
+        # and disable color output.
+        # FIXME: turn this into a script so contributors can run it locally.
+        run: |
+            export CARGO_TERM_COLOR=never
+            set -o pipefail
+            TEST_NAMES=$(find cpp-overload-test/src/bin -name "*-fail.rs" | \
+                sed 's|.*/\([^/]*\).rs|\1|g' )
+            echo "testing must fail: $TEST_NAMES"
+            for test_name in $TEST_NAMES; do
+                echo "testing must fail: $test_name"
+                # We expect cargo to fail, so don't exit the shell when it does
+                set +e
+                # Ignore build progress, if it's cached then the built crates change
+                cargo build --all-features --package cpp-overload-test --bin "$test_name" 2>&1 | \
+                    grep --invert-match -e 'Updating .* index' -e 'Downloading .*' -e 'Downloaded .*' -e 'Compiling [^ ]* .*' \
+                    > "/tmp/$test_name.stderr"
+                CARGO_EXIT_CODE=$?
+                set -e
+                if [[ $CARGO_EXIT_CODE -ne 101 ]]; then
+                    echo "error: $test_name compilation unexpectedly returned exit code $CARGO_EXIT_CODE rather than 101"
+                    exit 1
+                fi
+                echo "comparing diagnostics for: $test_name"
+                diff --unified=5 "cpp-overload-test/src/bin/$test_name.stderr" /tmp/"$test_name.stderr"
             done
 
   cpp-overload-file-names:
@@ -207,6 +245,7 @@ jobs:
       - publish-dry-run
       - diagnostics-rust
       - cpp-overload-test-ok
+      - cpp-overload-test-fail
       - cpp-overload-file-names
     steps:
       - name: Fail if any other job failed
@@ -222,4 +261,5 @@ jobs:
           [[ "${{ needs.publish-dry-run.result }}" == "success" ]] || exit 1
           [[ "${{ needs.diagnostics-rust.result }}" == "success" ]] || exit 1
           [[ "${{ needs.cpp-overload-test-ok.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.cpp-overload-test-fail.result }}" == "success" ]] || exit 1
           [[ "${{ needs.cpp-overload-file-names.result }}" == "success" ]] || exit 1
