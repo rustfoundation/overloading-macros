@@ -147,6 +147,50 @@ jobs:
                 diff --unified=5 "splat-overload-diagnostics/src/bin/$test_name.stderr" /tmp/"$test_name.stderr"
             done
 
+  cpp-overload-test-ok:
+    name: 9. Check Ok C++ overloads
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+        with:
+          toolchain: nightly
+          # Use the same components in every step for caching
+          components: cargo,clippy,rustfmt
+      - name: Check C++ overload ok cases
+        # FIXME: turn this into a script so contributors can run it locally.
+        run: |
+            set -o pipefail
+            TEST_NAMES=$(find cpp-overload-test/src/bin -name "*-ok.rs" | \
+                sed 's|.*/\([^/]*\).rs|\1|g' )
+            echo "testing: $TEST_NAMES"
+            for test_name in $TEST_NAMES; do
+                echo "testing ok: $test_name"
+                cargo build --all-features --package cpp-overload-test --bin "$test_name"
+            done
+
+  cpp-overload-file-names:
+    name: 11. Incorrect C++ overload file names
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+        with:
+          toolchain: nightly
+          # Use the same components in every step for caching
+          components: cargo,clippy,rustfmt
+      - name: Check C++ overload file names
+        # FIXME: turn this into a script so contributors can run it locally.
+        run: |
+            set -o pipefail
+            TEST_NAMES=$(find cpp-overload-test/src/bin -name "*.rs" -not -name "*-ok.rs" -not -name "*-fail.rs" | \
+                sed 's|.*/\([^/]*\).rs|\1|g' )
+            echo "incorrect file names: $TEST_NAMES"
+            if [[ -n "$TEST_NAMES" ]]; then
+                echo "error: incorrect file names found: all Rust files must be named *-ok.rs or *-fail.rs"
+                exit 1
+            fi
+
   all:
     name: All checks
     # Always run this job, even if earlier steps were skipped (or failed):
@@ -162,6 +206,8 @@ jobs:
       - fmt-rust
       - publish-dry-run
       - diagnostics-rust
+      - cpp-overload-test-ok
+      - cpp-overload-file-names
     steps:
       - name: Fail if any other job failed
         # Every job status needs to be checked here, because `always()` stops failures from propagating automatically
@@ -175,3 +221,5 @@ jobs:
           [[ "${{ needs.fmt-rust.result }}" == "success" ]] || exit 1
           [[ "${{ needs.publish-dry-run.result }}" == "success" ]] || exit 1
           [[ "${{ needs.diagnostics-rust.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.cpp-overload-test-ok.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.cpp-overload-file-names.result }}" == "success" ]] || exit 1
