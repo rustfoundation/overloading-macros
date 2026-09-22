@@ -43,7 +43,7 @@ impl StdForwardList {
         StdForwardList(list)
     }
 
-    fn const_lvalue_copy(other: &StdForwardList) -> StdForwardList {
+    fn copy_from(other: &StdForwardList) -> StdForwardList {
         let other = other.0 as *const c_void;
         let list = unsafe {
             cpp!([other as "const std::forward_list<int>*"] -> *mut c_void as "std::forward_list<int>*" {
@@ -54,7 +54,7 @@ impl StdForwardList {
         StdForwardList(list)
     }
 
-    fn rvalue_copy(other: &mut StdForwardList) -> StdForwardList {
+    fn move_from(other: &mut StdForwardList) -> StdForwardList {
         let other: *mut c_void = other.0;
         let list = unsafe {
             cpp!([other as "std::forward_list<int>*"] -> *mut c_void as "std::forward_list<int>*" {
@@ -87,14 +87,12 @@ overload! {
 
         /// Clone a list from a shared reference.
         fn new(other: &StdForwardList) -> StdForwardList {
-            StdForwardList::const_lvalue_copy(other)
+            StdForwardList::copy_from(other)
         }
 
-        /// Clone a list from a mutable reference.
-        /// Some C++ types use this to extend temporary lifetimes or mutate list objects during
-        /// copy construction.
+        /// Move list items from a mutable reference into a new list.
         fn new(other: &mut StdForwardList) -> StdForwardList {
-            StdForwardList::rvalue_copy(other)
+            StdForwardList::move_from(other)
         }
 
         // TODO:
