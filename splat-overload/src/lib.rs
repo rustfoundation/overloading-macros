@@ -48,6 +48,8 @@
 //!
 //! FIXME: document the resulting template we're trying to generate.
 
+use std::fmt;
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
@@ -68,6 +70,37 @@ enum OverloadInput {
     },
 }
 
+/// Checks that all the overloaded functions have the same name.
+fn check_overload_names(functions: &[ItemFn]) -> &syn::Ident {
+    let first_fn_name = &functions[0].sig.ident;
+    for func in functions {
+        if &func.sig.ident != first_fn_name {
+            panic!(
+                "all overloads must have the same name, got {} and {}",
+                first_fn_name, func.sig.ident
+            );
+        }
+    }
+
+    first_fn_name
+}
+
+/// Checks that all the overloaded functions have the same receiver kind.
+fn check_overload_receiver_kind(functions: &[ItemFn]) -> ReceiverKind {
+    let first_receiver = ReceiverKind::from_args(&functions[0].sig.inputs.first());
+    for func in functions {
+        let next_receiver = ReceiverKind::from_args(&func.sig.inputs.first());
+        if next_receiver != first_receiver {
+            panic!(
+                "all overloads must have the same receiver kind \
+                (&self, &mut self, self, or no receiver), got {}: {:?} and {}: {:?}",
+                functions[0].sig.ident, first_receiver, func.sig.ident, next_receiver
+            );
+        }
+    }
+    first_receiver
+}
+
 impl Parse for OverloadInput {
     /// Parse the input list of functions into different function kind variants.
     fn parse(input: ParseStream) -> Result<Self> {
@@ -76,7 +109,10 @@ impl Parse for OverloadInput {
 
             let self_ty = match &*item_impl.self_ty {
                 syn::Type::Path(type_path) => type_path.path.segments.last().unwrap().ident.clone(),
-                _ => panic!("overload! impl block must use a plain type name"),
+                self_ty => panic!(
+                    "overload! impl block must use a plain type name, got {:?}",
+                    self_ty
+                ),
             };
 
             let functions = item_impl
@@ -89,7 +125,10 @@ impl Parse for OverloadInput {
                         sig: impl_fn.sig,
                         block: Box::new(impl_fn.block),
                     },
-                    _ => panic!("overload! impl block may only contain fn items"),
+                    _ => panic!(
+                        "overload! impl block may only contain fn items, got: {:?}",
+                        item
+                    ),
                 })
                 .collect();
 
@@ -176,7 +215,7 @@ fn tuple_ty_for(arg_types: &[proc_macro2::TokenStream]) -> proc_macro2::TokenStr
 
 /// Generates the overladed trait code for a list of free functions.
 fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
-    let fn_name = &functions[0].sig.ident;
+    let fn_name = check_overload_names(&functions);
     let trait_name = trait_name_for(fn_name);
 
     let mut impls = Vec::new();
@@ -220,7 +259,7 @@ fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
 }
 
 /// The kind of receiver for a method or associated function.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 enum ReceiverKind {
     /// self
     Owned,
@@ -255,24 +294,24 @@ impl ReceiverKind {
     }
 }
 
+impl fmt::Debug for ReceiverKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ReceiverKind::Owned => write!(f, "self"),
+            ReceiverKind::Ref => write!(f, "&self"),
+            ReceiverKind::RefMut => write!(f, "&mut self"),
+            ReceiverKind::NoReceiver => write!(f, "(no self argument)"),
+        }
+    }
+}
+
 /// Generates the overladed trait code for a list of methods or associated functions.
 fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream {
-    let fn_name = &functions[0].sig.ident;
+    let fn_name = check_overload_names(&functions);
     let trait_name = trait_name_for(fn_name);
 
     // Check all the receiver kinds match, if not, panic.
-    let receiver_kind = {
-        let first_receiver = ReceiverKind::from_args(&functions[0].sig.inputs.first());
-        for func in &functions {
-            let next_receiver = ReceiverKind::from_args(&func.sig.inputs.first());
-            if next_receiver != first_receiver {
-                panic!(
-                    "all overloads must use the same receiver kind (&self, &mut self, self, or no receiver)"
-                );
-            }
-        }
-        first_receiver
-    };
+    let receiver_kind = check_overload_receiver_kind(&functions);
 
     // Generate fragments used to generate the trait impmentation.
     // The generic type used for the `this` argument pseudo-receiver.
