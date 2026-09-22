@@ -70,9 +70,8 @@ impl StdForwardList {
     /// ### Limitations
     ///
     /// `std::from_range` is used as a tag to disambiguate this constructor, it is part of the C++
-    /// standard library API. The Rust overload needs no tag, so it is more ergonomic.
-    ///
-    /// Rust does not allow `impl Iterator` in this position, so we use generics instead.
+    /// standard library API. The Rust overload requires a cast to `dyn Iterator` instead, but this
+    /// is likely just a macro limitation.
     ///
     /// This implementation builds a Rust `Vec` and C++ `std::vector` from the iterator for simplicity.
     /// A production implementation could use a Rust-to-C++ iterator-to-range adapter.
@@ -164,7 +163,7 @@ overload! {
         ///
         /// The `overload!` macro doesn't support generics in this position yet, so we use
         /// `dyn Trait` instead.
-        /// FIXME: preserve function item-level generics in the macro.
+        /// FIXME: make the macro support generic iterators, or handle `impl Iterator` correctly.
         fn new(iter: &mut dyn Iterator<Item = c_int>) -> StdForwardList {
             StdForwardList::from_iter(iter)
         }
@@ -187,7 +186,7 @@ overload! {
         /// Rust doesn't have a language equivalent to C++'s `initializer_list`, and it doesn't
         /// have variadic tuples, so we can't overload on the tuple trait itself.
         ///
-        /// The following numbers of argument clash with other overloads:
+        /// The following initializer argument counts clash with other overloads:
         /// - 0: the default no-argument constructor
         /// - 1: the `count` default-value repetition constructor, if `T` is `size_t`
         ///   - most constructors take 1 argument, so there could be other clashes in unusual
@@ -203,8 +202,21 @@ pub fn test_forward_list() {
     let mut default_list = StdForwardList::new();
     let _repeat_default = StdForwardList::new(10);
     let _repeat_with = StdForwardList::new(42, 100);
-    let _from_slice = StdForwardList::new(&[1, 2, 3]);
-    let _from_iter = StdForwardList::new(&mut (0..10).into_iter());
+
+    // ### Limitations
+    //
+    // The `as_slice` call is required to match the overload, an array doesn't automatically coerce.
+    // FIXME: maybe add a const generic overload for arrays.
+    let _from_slice = StdForwardList::new([1, 2, 3].as_slice());
+
+    // ### Limitations
+    //
+    // The cast is required to match the overload, an iterator doesn't automatically coerce.
+    // It would be more ergonomic for users to collect the iterator themselves, then use the slice
+    // overload, or create a Rust/C++ iterator-to-range adapter.
+    let mut iter = [1, 2, 3].iter().copied();
+    let _from_iter = StdForwardList::new(&mut iter as &mut dyn Iterator<Item = _>);
+
     let _ref_clone = StdForwardList::new(&default_list);
     let _mut_clone = StdForwardList::new(&mut default_list);
     let _from_initializer_list = StdForwardList::new(1, 2, 3);
