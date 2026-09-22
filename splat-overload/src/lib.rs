@@ -45,6 +45,8 @@
 //! assert_eq!(compute(10, 32), 42);
 //! # }
 //! ```
+//!
+//! FIXME: document the resulting template we're trying to generate.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -55,15 +57,19 @@ use syn::{
 };
 
 enum OverloadInput {
+    /// A list of free functions
     Functions(Vec<ItemFn>),
-    /// Methods or associated functions
+    /// A list of methods or associated functions, with the impl (Self) type.
+    /// FIXME: this should be refactored into separate Method and AssociatedFn variants
     Methods {
+        /// The impl (Self) type.
         self_ty: syn::Ident,
         functions: Vec<ItemFn>,
     },
 }
 
 impl Parse for OverloadInput {
+    /// Parse the input list of functions into different function kind variants.
     fn parse(input: ParseStream) -> Result<Self> {
         if input.peek(Token![impl]) {
             let item_impl: syn::ItemImpl = input.parse()?;
@@ -98,6 +104,7 @@ impl Parse for OverloadInput {
     }
 }
 
+/// Returns a unique trait name for the supplied function name.
 fn trait_name_for(fn_name: &syn::Ident) -> syn::Ident {
     quote::format_ident!(
         "{}Args",
@@ -114,9 +121,11 @@ fn trait_name_for(fn_name: &syn::Ident) -> syn::Ident {
     )
 }
 
+/// Collects the argument types, names, and indices from a function signature.
 fn collect_args(
     func: &ItemFn,
 ) -> (
+    // FIXME: turn this into a vector of custom structs.
     Vec<proc_macro2::TokenStream>,
     Vec<proc_macro2::TokenStream>,
     Vec<proc_macro2::TokenStream>,
@@ -148,6 +157,7 @@ fn collect_args(
     (arg_types, arg_names, arg_indices)
 }
 
+/// Returns the output type for a function signature, replacing the default type with `()`.
 fn output_ty_for(func: &ItemFn) -> proc_macro2::TokenStream {
     match &func.sig.output {
         syn::ReturnType::Default => quote! { () },
@@ -155,6 +165,7 @@ fn output_ty_for(func: &ItemFn) -> proc_macro2::TokenStream {
     }
 }
 
+/// Transforms a list of argument types into a single tuple type containing those types.
 fn tuple_ty_for(arg_types: &[proc_macro2::TokenStream]) -> proc_macro2::TokenStream {
     if arg_types.is_empty() {
         quote! { () }
@@ -163,6 +174,7 @@ fn tuple_ty_for(arg_types: &[proc_macro2::TokenStream]) -> proc_macro2::TokenStr
     }
 }
 
+/// Generates the overladed trait code for a list of free functions.
 fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
     let fn_name = &functions[0].sig.ident;
     let trait_name = trait_name_for(fn_name);
@@ -243,10 +255,12 @@ impl ReceiverKind {
     }
 }
 
+/// Generates the overladed trait code for a list of methods or associated functions.
 fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream {
     let fn_name = &functions[0].sig.ident;
     let trait_name = trait_name_for(fn_name);
 
+    // Check all the receiver kinds match, if not, panic.
     let receiver_kind = {
         let first_receiver = ReceiverKind::from_args(&functions[0].sig.inputs.first());
         for func in &functions {
@@ -260,6 +274,8 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         first_receiver
     };
 
+    // Generate fragments used to generate the trait impmentation.
+    // The generic type used for the `this` argument pseudo-receiver.
     let this_generic_ty = match receiver_kind {
         ReceiverKind::RefMut => quote! { , this: &mut R },
         ReceiverKind::Ref => quote! { , this: &R },
@@ -267,6 +283,7 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         ReceiverKind::NoReceiver => quote! {},
     };
 
+    // The concrete type used for the `this` argument pseudo-receiver.
     let this_concrete_ty = match receiver_kind {
         ReceiverKind::RefMut => quote! { , this: &mut #self_ty },
         ReceiverKind::Ref => quote! { , this: &#self_ty },
@@ -282,22 +299,28 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         let output_ty = output_ty_for(func);
         let tuple_ty = tuple_ty_for(&arg_types);
         let block = &func.block;
+
+        // The declaration receiver for the current function, already comes with &/&mut.
         let func_receiver = match func.sig.inputs.first() {
             Some(FnArg::Receiver(r)) => quote! { #r, },
             _ => quote! {},
         };
+        // The receiver variable/type in the caller, either `this.` or the `Self::` type for
+        // no receiver.
         let caller_receiver = match receiver_kind {
             ReceiverKind::RefMut | ReceiverKind::Ref | ReceiverKind::Owned => quote! { this. },
             ReceiverKind::NoReceiver => quote! { #self_ty:: },
         };
-        let hidden_name = quote::format_ident!("__{}_impl_{}", fn_name, i);
 
+        // The hidden impl method name for the current function.
+        let hidden_name = quote::format_ident!("__{}_impl_{}", fn_name, i);
         hidden_methods.push(quote! {
             fn #hidden_name(#func_receiver #(#arg_names: #arg_types),*) -> #output_ty {
                 #block
             }
         });
 
+        // The full trait impl for this specific function overload.
         impls.push(quote! {
             impl #trait_name<#self_ty> for #tuple_ty {
                 type Output = #output_ty;
@@ -310,7 +333,7 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
     }
 
     // The receiver for the overload dispatch function, its comma, and the receiver variable passed
-    // to it (either `self` or no argument for associated functions).
+    // to it in the caller (either `self` or no argument for associated functions).
     let (receiver, receiver_comma, self_arg) = match functions[0].sig.inputs.first() {
         Some(FnArg::Receiver(r)) => (quote! { #r }, quote! { , }, quote! { self }),
         _ => (quote! {}, quote! {}, quote! {}),
@@ -342,8 +365,11 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
     generated.into()
 }
 
+/// The main proc macro entry point.
 #[proc_macro]
 pub fn overload(input: TokenStream) -> TokenStream {
+    // Parse the input list of functions into different function kind variants, then generate
+    // the overloads for them.
     match parse_macro_input!(input as OverloadInput) {
         OverloadInput::Functions(functions) => generate_free_functions(functions),
         OverloadInput::Methods { self_ty, functions } => generate_methods(self_ty, functions),
