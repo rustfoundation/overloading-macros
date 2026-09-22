@@ -128,9 +128,9 @@ jobs:
             set -o pipefail
             TEST_NAMES=$(find splat-overload-diagnostics/src/bin -name "*.rs" | \
                 sed 's|.*/\([^/]*\).rs|\1|g' )
-            echo "testing: $TEST_NAMES"
+            echo "testing failure diagnostics: $TEST_NAMES"
             for test_name in $TEST_NAMES; do
-                echo "testing: $test_name"
+                echo "testing failure diagnostics: $test_name"
                 # We expect cargo to fail, so don't exit the shell when it does
                 set +e
                 # Ignore build progress, if it's cached then the built crates change
@@ -188,9 +188,9 @@ jobs:
             set -o pipefail
             TEST_NAMES=$(find cpp-overload-test/src/bin -name "*-fail.rs" | \
                 sed 's|.*/\([^/]*\).rs|\1|g' )
-            echo "testing must fail: $TEST_NAMES"
+            echo "testing incompatible overloads: $TEST_NAMES"
             for test_name in $TEST_NAMES; do
-                echo "testing must fail: $test_name"
+                echo "testing incompatible overloads: $test_name"
                 # We expect cargo to fail, so don't exit the shell when it does
                 set +e
                 # Ignore build progress, if it's cached then the built crates change
@@ -203,7 +203,7 @@ jobs:
                     echo "error: $test_name compilation unexpectedly returned exit code $CARGO_EXIT_CODE rather than 101"
                     exit 1
                 fi
-                echo "comparing diagnostics for: $test_name"
+                echo "comparing incompatible overload diagnostics for: $test_name"
                 diff --unified=5 "cpp-overload-test/src/bin/$test_name.stderr" /tmp/"$test_name.stderr"
             done
 
