@@ -117,6 +117,18 @@ impl StdForwardList {
         };
         StdForwardList(list)
     }
+
+    /// ### Limitations
+    ///
+    /// This is just an example, a production implementation would support any number of arguments.
+    fn from_initializer_list(a: c_int, b: c_int, c: c_int) -> StdForwardList {
+        let list = unsafe {
+            cpp!([a as "int", b as "int", c as "int"] -> *mut c_void as "std::forward_list<int>*" {
+                return new std::forward_list<int>{ a, b, c };
+            })
+        };
+        StdForwardList(list)
+    }
 }
 
 // We ignore constructors that only differ by an allocator argument, because they're not
@@ -167,8 +179,23 @@ overload! {
             StdForwardList::move_from(other)
         }
 
-        // TODO:
-        // initializer_list
+        /// Construct a list from the supplied items.
+        ///
+        /// ### Limitations
+        ///
+        /// This is just an example, a production implementation would support any number of arguments.
+        /// Rust doesn't have a language equivalent to C++'s `initializer_list`, and it doesn't
+        /// have variadic tuples, so we can't overload on the tuple trait itself.
+        ///
+        /// The following numbers of argument clash with other overloads:
+        /// - 0: the default no-argument constructor
+        /// - 1: the `count` default-value repetition constructor, if `T` is `size_t`
+        ///   - most constructors take 1 argument, so there could be other clashes in unusual
+        ///     circumstances.
+        /// - 2: the `value` repetition constructor, if `T` is `size_t`
+        fn new(a: c_int, b: c_int, c: c_int) -> StdForwardList {
+            StdForwardList::from_initializer_list(a, b, c)
+        }
     }
 }
 
@@ -178,4 +205,5 @@ pub fn test_forward_list() {
     let _repeat_with = StdForwardList::new(42, 100);
     let _ref_clone = StdForwardList::new(&default_list);
     let _mut_clone = StdForwardList::new(&mut default_list);
+    let _from_initializer_list = StdForwardList::new(1, 2, 3);
 }
