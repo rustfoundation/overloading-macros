@@ -34,8 +34,9 @@ repository = "https://github.com/rustfoundation/overloading-macros"
 rust-version = "1.100"
 
 [workspace.dependencies]
+# FIXME: update to syn 3.0.6 and fix the code
 syn = { version = "2.0.119", features = ["full", "extra-traits"] }
-quote = "1.0.46"
-proc-macro2 = "1.0.106"
+quote = "1.0.47"
+proc-macro2 = "1.0.107"
 cpp = "0.5.11"
 cpp_build = "0.5.11"
