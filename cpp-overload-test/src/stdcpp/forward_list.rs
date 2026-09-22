@@ -13,6 +13,11 @@ cpp! {{
 }}
 
 /// A wrapper struct to hold the returned C++ pointer.
+///
+/// ### Limitations
+///
+/// This struct and the impl should be fully generic over the list type.
+/// FIXME: try this and see if the `overload!` macro and `splat` feature can handle it.
 struct StdForwardList(*mut c_void);
 
 // The cpp! macro doesn't work inside the overload! macro, so we extract C++ calls into separate methods.
