@@ -201,8 +201,10 @@ overload! {
 
 pub fn test_forward_list() {
     let mut default_list = StdForwardList::new();
-    let _with_capacity = StdForwardList::new(10);
+    let _repeat_default = StdForwardList::new(10);
     let _repeat_with = StdForwardList::new(42, 100);
+    let _from_slice = StdForwardList::new(&[1, 2, 3]);
+    let _from_iter = StdForwardList::new(&mut (0..10).into_iter());
     let _ref_clone = StdForwardList::new(&default_list);
     let _mut_clone = StdForwardList::new(&mut default_list);
     let _from_initializer_list = StdForwardList::new(1, 2, 3);
