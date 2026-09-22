@@ -1,5 +1,4 @@
-#![feature(splat, tuple_trait)]
-#![allow(incomplete_features)]
+//! Test that C++ overloads for `std::forward_list` can be successfully represented in Rust.
 #![allow(unused_braces)]
 
 use cpp::cpp;
@@ -105,7 +104,7 @@ overload! {
     }
 }
 
-fn main() {
+pub fn test_forward_list() {
     let mut default_list = StdForwardList::new();
     let _with_capacity = StdForwardList::new(10);
     let _repeat_with = StdForwardList::new(42, 100);

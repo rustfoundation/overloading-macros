@@ -1,8 +1,8 @@
 error[E0080]: evaluation panicked: There are no failing overloads for C++ `std::forward_list` yet
- --> cpp-overload-test/src/bin/std-forward-list-fail.rs:2:19
+ --> cpp-overload-test/examples/stdcpp-forward-list.rs:8:19
   |
-2 |     const _: () = panic!("There are no failing overloads for C++ `std::forward_list` yet");
+8 |     const _: () = panic!("There are no failing overloads for C++ `std::forward_list` yet");
   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ evaluation of `main::_` failed here
 
 For more information about this error, try `rustc --explain E0080`.
-error: could not compile `cpp-overload-test` (bin "std-forward-list-fail") due to 1 previous error
+error: could not compile `cpp-overload-test` (example "stdcpp-forward-list") due to 1 previous error
