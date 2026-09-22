@@ -32,6 +32,8 @@ jobs:
   test-rust:
     name: 2. Test Rust crates
     runs-on: ubuntu-latest
+    needs:
+      - build-rust
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
@@ -44,15 +46,17 @@ jobs:
             cargo test --doc --all-features
 
   run:
-    name: 3. Run Rust example binaries
+    name: 3. Run Rust overload-test binaries
     runs-on: ubuntu-latest
+    needs:
+      - build-rust
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
         with:
           toolchain: nightly
           components: cargo,clippy,rustfmt
-      - name: Run Rust example binaries
+      - name: Run Rust overload-test binaries
         # Find all test crate binaries, extract the basename (no directories or extensions),
         # then run them one at a time with cargo.
         # There is no default-run binary set in Cargo.toml.
@@ -100,6 +104,8 @@ jobs:
   publish-dry-run:
     name: 7. Dry run publishing
     runs-on: ubuntu-latest
+    needs:
+      - build-rust
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
@@ -112,6 +118,8 @@ jobs:
   diagnostics-rust:
     name: 8. Diagnostics tests on Rust crates
     runs-on: ubuntu-latest
+    needs:
+      - build-rust
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
@@ -150,7 +158,10 @@ jobs:
 
   cpp-overload-test-ok:
     name: 9. Check C++ overloads
-    runs-on: ubuntu-latest
+    # Ubuntu 26.04 is needed for C++23 standard library features.
+    runs-on: ubuntu-26.04
+    needs:
+      - build-rust
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
@@ -161,6 +172,12 @@ jobs:
       # FIXME: turn this into a script so contributors can run it locally.
       - name: Check C++ overload ok cases
         run: |
+            echo "Checking the crate library builds on a newer platform:"
+            cargo build --all-targets --all-features
+            cargo clippy --all-targets --all-features -- --deny warnings
+            cargo test --all-targets --all-features
+            cargo test --doc --all-features
+            echo "Checking the C++ overload test crate builds:"
             cargo build --all-features --package cpp-overload-test --lib
             cargo clippy --all-features --package cpp-overload-test -- --deny warnings
             cargo test --all-features --package cpp-overload-test --lib
@@ -169,7 +186,10 @@ jobs:
 
   cpp-overload-test-fail:
     name: 10. Must-fail C++ overloads
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
+    # Don't run unless the test crate has built successfully, crates arealways built for examples.
+    needs:
+      - cpp-overload-test-ok
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
@@ -182,6 +202,7 @@ jobs:
         # and disable color output.
         # FIXME: turn this into a script so contributors can run it locally.
         run: |
+            echo "Checking must-fail example builds:"
             export CARGO_TERM_COLOR=never
             set -o pipefail
             TEST_NAMES=$(find cpp-overload-test/examples -name "*.rs" | \
