@@ -124,6 +124,7 @@ jobs:
         # and disable color output.
         # FIXME: turn this into a script so we can run it locally.
         run: |
+            cargo fmt --package splat-overload-diagnostics -- --check
             export CARGO_TERM_COLOR=never
             set -o pipefail
             TEST_NAMES=$(find splat-overload-diagnostics/src/bin -name "*.rs" | \
@@ -160,7 +161,11 @@ jobs:
       # FIXME: turn this into a script so contributors can run it locally.
       - name: Check C++ overload ok cases
         run: |
-            cargo build --all-features --package cpp-overload-test
+            cargo build --all-features --package cpp-overload-test --lib
+            cargo clippy --all-features --package cpp-overload-test -- --deny warnings
+            cargo test --all-features --package cpp-overload-test --lib
+            cargo test --doc --all-features --package cpp-overload-test
+            cargo fmt --package cpp-overload-test -- --check
 
   cpp-overload-test-fail:
     name: 10. Must-fail C++ overloads
