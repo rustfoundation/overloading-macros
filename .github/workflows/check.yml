@@ -148,7 +148,7 @@ jobs:
             done
 
   cpp-overload-test-ok:
-    name: 9. Check Ok C++ overloads
+    name: 9. Check C++ overloads
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -157,17 +157,10 @@ jobs:
           toolchain: nightly
           # Use the same components in every step for caching
           components: cargo,clippy,rustfmt
+      # FIXME: turn this into a script so contributors can run it locally.
       - name: Check C++ overload ok cases
-        # FIXME: turn this into a script so contributors can run it locally.
         run: |
-            set -o pipefail
-            TEST_NAMES=$(find cpp-overload-test/src/bin -name "*-ok.rs" | \
-                sed 's|.*/\([^/]*\).rs|\1|g' )
-            echo "testing ok: $TEST_NAMES"
-            for test_name in $TEST_NAMES; do
-                echo "testing ok: $test_name"
-                cargo build --all-features --package cpp-overload-test --bin "$test_name"
-            done
+            cargo build --all-features --package cpp-overload-test
 
   cpp-overload-test-fail:
     name: 10. Must-fail C++ overloads
@@ -180,13 +173,13 @@ jobs:
           # Use the same components in every step for caching
           components: cargo,clippy,rustfmt
       - name: Check C++ overload fail cases
-        # To bless (update the expected output), change '/tmp' to 'cpp-overload-test/src/bin',
+        # To bless (update the expected output), change '/tmp' to 'cpp-overload-test/examples',
         # and disable color output.
         # FIXME: turn this into a script so contributors can run it locally.
         run: |
             export CARGO_TERM_COLOR=never
             set -o pipefail
-            TEST_NAMES=$(find cpp-overload-test/src/bin -name "*-fail.rs" | \
+            TEST_NAMES=$(find cpp-overload-test/examples -name "*.rs" | \
                 sed 's|.*/\([^/]*\).rs|\1|g' )
             echo "testing incompatible overloads: $TEST_NAMES"
             for test_name in $TEST_NAMES; do
@@ -194,7 +187,7 @@ jobs:
                 # We expect cargo to fail, so don't exit the shell when it does
                 set +e
                 # Ignore build progress, if it's cached then the built crates change
-                cargo build --all-features --package cpp-overload-test --bin "$test_name" 2>&1 | \
+                cargo build --all-features --package cpp-overload-test --example "$test_name" 2>&1 | \
                     grep --invert-match -e 'Updating .* index' -e 'Downloading .*' -e 'Downloaded .*' -e 'Compiling [^ ]* .*' \
                     > "/tmp/$test_name.stderr"
                 CARGO_EXIT_CODE=$?
@@ -204,30 +197,8 @@ jobs:
                     exit 1
                 fi
                 echo "comparing incompatible overload diagnostics for: $test_name"
-                diff --unified=5 "cpp-overload-test/src/bin/$test_name.stderr" /tmp/"$test_name.stderr"
+                diff --unified=5 "cpp-overload-test/examples/$test_name.stderr" /tmp/"$test_name.stderr"
             done
-
-  cpp-overload-file-names:
-    name: 11. Incorrect C++ overload file names
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
-        with:
-          toolchain: nightly
-          # Use the same components in every step for caching
-          components: cargo,clippy,rustfmt
-      - name: Check C++ overload file names
-        # FIXME: turn this into a script so contributors can run it locally.
-        run: |
-            set -o pipefail
-            TEST_NAMES=$(find cpp-overload-test/src/bin -name "*.rs" -not -name "*-ok.rs" -not -name "*-fail.rs" | \
-                sed 's|.*/\([^/]*\).rs|\1|g' )
-            echo "incorrect file names: $TEST_NAMES"
-            if [[ -n "$TEST_NAMES" ]]; then
-                echo "error: incorrect file names found: all Rust files must be named *-ok.rs or *-fail.rs"
-                exit 1
-            fi
 
   all:
     name: All checks
@@ -246,7 +217,6 @@ jobs:
       - diagnostics-rust
       - cpp-overload-test-ok
       - cpp-overload-test-fail
-      - cpp-overload-file-names
     steps:
       - name: Fail if any other job failed
         # Every job status needs to be checked here, because `always()` stops failures from propagating automatically
@@ -262,4 +232,3 @@ jobs:
           [[ "${{ needs.diagnostics-rust.result }}" == "success" ]] || exit 1
           [[ "${{ needs.cpp-overload-test-ok.result }}" == "success" ]] || exit 1
           [[ "${{ needs.cpp-overload-test-fail.result }}" == "success" ]] || exit 1
-          [[ "${{ needs.cpp-overload-file-names.result }}" == "success" ]] || exit 1
