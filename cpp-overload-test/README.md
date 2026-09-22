@@ -1,4 +1,4 @@
-These examples are automatically run in CI:
+This code is automatically run in CI:
 
-- Examples named `*-ok.rs` are expected to succeed.
-- Examples named `*-fail.rs` are expected to fail, with output in the corresponding `.stderr` file.
+- Submodules of `lib.rs` are expected to succeed. They are named after each C++ class.
+- Examples are expected to fail, with output in the corresponding `.stderr` file, also named after C++ classes.
