@@ -1,8 +1,34 @@
-error[E0080]: evaluation panicked: There are no failing overloads for C++ `std::forward_list` yet
- --> cpp-overload-test/examples/stdcpp-forward-list.rs:8:19
-  |
-8 |     const _: () = panic!("There are no failing overloads for C++ `std::forward_list` yet");
-  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ evaluation of `main::_` failed here
+error[E0119]: conflicting implementations of trait `NewArgs<StdForwardListT>` for type `(usize,)`
+  --> cpp-overload-test/examples/stdcpp-forward-list.rs:29:1
+   |
+29 | / overload! {
+30 | |     impl StdForwardListT {
+31 | |         /// Construct a list with `count` default-constructed items.
+32 | |         fn new(_count: c_size_t) -> StdForwardListT {
+...  |
+65 | | }
+   | | ^
+   | | |
+   | |_first implementation here
+   |   conflicting implementation for `(usize,)`
+   |
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-For more information about this error, try `rustc --explain E0080`.
-error: could not compile `cpp-overload-test` (example "stdcpp-forward-list") due to 1 previous error
+error[E0119]: conflicting implementations of trait `NewArgs<StdForwardListT>` for type `(usize, usize)`
+  --> cpp-overload-test/examples/stdcpp-forward-list.rs:29:1
+   |
+29 | / overload! {
+30 | |     impl StdForwardListT {
+31 | |         /// Construct a list with `count` default-constructed items.
+32 | |         fn new(_count: c_size_t) -> StdForwardListT {
+...  |
+65 | | }
+   | | ^
+   | | |
+   | |_first implementation here
+   |   conflicting implementation for `(usize, usize)`
+   |
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0119`.
+error: could not compile `cpp-overload-test` (example "stdcpp-forward-list") due to 2 previous errors
