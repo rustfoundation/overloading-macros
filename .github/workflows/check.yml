@@ -130,6 +130,8 @@ jobs:
       - name: Check diagnostic output
         # To bless (update the expected diagnostics), change '/tmp' to 'splat-overload-diagnostics/src/bin',
         # and disable color output.
+        # Or just do `cargo build --package splat-overload-diagnostics --bin NAME > splat-overload-diagnostics/src/bin/NAME.stderr 2>&1`
+        # and delete the cargo Updating/Download*/Compiling logs.
         # FIXME: turn this into a script so we can run it locally.
         run: |
             cargo fmt --package splat-overload-diagnostics -- --check
@@ -200,6 +202,8 @@ jobs:
       - name: Check C++ overload fail cases
         # To bless (update the expected output), change '/tmp' to 'cpp-overload-test/examples',
         # and disable color output.
+        # Or just do `cargo build --package cpp-overload-test --example NAME > cpp-overload-test/examples/NAME.stderr 2>&1`
+        # and delete the cargo Updating/Download*/Compiling logs.
         # FIXME: turn this into a script so contributors can run it locally.
         run: |
             echo "Checking must-fail example builds:"
