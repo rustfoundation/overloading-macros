@@ -1,15 +1,18 @@
 //! Test that C++ overloads for `std::forward_list` can be successfully represented in Rust.
+
 #![allow(unused_braces)]
 
 use cpp::cpp;
 use splat_overload::overload;
-use std::ffi::{c_int, c_void};
+use std::ffi::{c_size_t, c_void};
+use std::marker::PhantomData;
 
 // C++ header includes
 cpp! {{
     #include <forward_list>
     #include <vector>
     #include <ranges>
+    #include <cstddef>
 }}
 
 /// A wrapper struct to hold the returned C++ pointer.
@@ -17,8 +20,11 @@ cpp! {{
 /// ### Limitations
 ///
 /// This struct and the impl should be fully generic over the list type.
-/// FIXME: try this and see if the `overload!` macro and `splat` feature can handle it.
-struct StdForwardList(*mut c_void);
+/// FIXME: make the `overload!` macro support generics.
+struct StdForwardList(*mut c_void, PhantomData<T>);
+
+/// Workaround for missing generic support in the `overload!` macro.
+type T = std::ffi::c_int;
 
 // The cpp! macro doesn't work inside the overload! macro, so we extract C++ calls into separate methods.
 // A mature overload feature (or a production C++ project) wouldn't need this impl block.
@@ -29,25 +35,25 @@ impl StdForwardList {
                 return new std::forward_list<int>();
             })
         };
-        StdForwardList(list)
+        StdForwardList(list, PhantomData)
     }
 
-    fn repeat_default(count: usize) -> StdForwardList {
+    fn repeat_default(count: c_size_t) -> StdForwardList {
         let list = unsafe {
             cpp!([count as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
                 return new std::forward_list<int>(count);
             })
         };
-        StdForwardList(list)
+        StdForwardList(list, PhantomData)
     }
 
-    fn repeat_with(value: c_int, count: usize) -> StdForwardList {
+    fn repeat_with(value: T, count: c_size_t) -> StdForwardList {
         let list = unsafe {
             cpp!([value as "int", count as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
                 return new std::forward_list<int>(value, count);
             })
         };
-        StdForwardList(list)
+        StdForwardList(list, PhantomData)
     }
 
     /// ### Limitations
@@ -55,16 +61,16 @@ impl StdForwardList {
     /// The slice satisfies C++ `ContiguousIterator`, even though it's not a requirement for this
     /// C++ iterator overload.
     /// FIXME: allow non-contiguous iterators, if that makes sense in Rust.
-    fn from_slice(items: &[c_int]) -> StdForwardList {
+    fn from_slice(items: &[T]) -> StdForwardList {
         let len = items.len();
-        let items: *const c_int = items.as_ptr();
+        let items: *const T = items.as_ptr();
         let list = unsafe {
             cpp!([items as "const int*", len as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
                 // In C++, `items + len` increments the pointer by `len` elements of `sizeof(int)`.
                 return new std::forward_list<int>(items, items + len);
             })
         };
-        StdForwardList(list)
+        StdForwardList(list, PhantomData)
     }
 
     /// ### Limitations
@@ -75,10 +81,10 @@ impl StdForwardList {
     ///
     /// This implementation builds a Rust `Vec` and C++ `std::vector` from the iterator for simplicity.
     /// A production implementation could use a Rust-to-C++ iterator-to-range adapter.
-    fn from_iter(iter: &mut dyn Iterator<Item = c_int>) -> StdForwardList {
-        let items: Vec<c_int> = iter.collect();
+    fn from_iter(iter: &mut dyn Iterator<Item = T>) -> StdForwardList {
+        let items: Vec<T> = iter.collect();
         let len = items.len();
-        let items: *const c_int = items.as_ptr();
+        let items: *const T = items.as_ptr();
         let list = unsafe {
             cpp!([items as "const int*", len as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
                 // Use the legacy iterator constructor for `vector`.
@@ -92,7 +98,7 @@ impl StdForwardList {
                 #endif
             })
         };
-        StdForwardList(list)
+        StdForwardList(list, PhantomData)
     }
 
     fn copy_from(other: &StdForwardList) -> StdForwardList {
@@ -103,7 +109,7 @@ impl StdForwardList {
                 return new std::forward_list<int>(other_);
             })
         };
-        StdForwardList(list)
+        StdForwardList(list, PhantomData)
     }
 
     fn move_from(other: &mut StdForwardList) -> StdForwardList {
@@ -114,19 +120,37 @@ impl StdForwardList {
                 return new std::forward_list<int>(other_);
             })
         };
-        StdForwardList(list)
+        StdForwardList(list, PhantomData)
     }
 
     /// ### Limitations
     ///
-    /// This is just an example, a production implementation would support any number of arguments.
-    fn from_initializer_list(a: c_int, b: c_int, c: c_int) -> StdForwardList {
+    /// These are just examples, a production implementation would support any number of arguments.    
+    fn from_initializer_list_1(a: T) -> StdForwardList {
+        let list = unsafe {
+            cpp!([a as "int"] -> *mut c_void as "std::forward_list<int>*" {
+                return new std::forward_list<int>{ a };
+            })
+        };
+        StdForwardList(list, PhantomData)
+    }
+
+    fn from_initializer_list_2(a: T, b: T) -> StdForwardList {
+        let list = unsafe {
+            cpp!([a as "int", b as "int"] -> *mut c_void as "std::forward_list<int>*" {
+                return new std::forward_list<int>{ a, b };
+            })
+        };
+        StdForwardList(list, PhantomData)
+    }
+
+    fn from_initializer_list_3(a: T, b: T, c: T) -> StdForwardList {
         let list = unsafe {
             cpp!([a as "int", b as "int", c as "int"] -> *mut c_void as "std::forward_list<int>*" {
                 return new std::forward_list<int>{ a, b, c };
             })
         };
-        StdForwardList(list)
+        StdForwardList(list, PhantomData)
     }
 }
 
@@ -140,17 +164,17 @@ overload! {
         }
 
         /// Construct a list with `count` default-constructed items.
-        fn new(count: usize) -> StdForwardList {
+        fn new(count: c_size_t) -> StdForwardList {
             StdForwardList::repeat_default(count)
         }
 
         /// Construct a list filled with `count` instances of the given value.
-        fn new(value: c_int, count: usize) -> StdForwardList {
+        fn new(value: T, count: c_size_t) -> StdForwardList {
             StdForwardList::repeat_with(value, count)
         }
 
         /// Construct a list by copying items from a slice.
-        fn new(items: &[c_int]) -> StdForwardList {
+        fn new(items: &[T]) -> StdForwardList {
             StdForwardList::from_slice(items)
         }
 
@@ -159,12 +183,13 @@ overload! {
         /// ### Limitations
         ///
         /// `&mut dyn Iterator<T>` (and `&mut Iterator<T>`) can never be the same type as `&[T]`,
-        /// but passing an owned `impl Iterator<T>` here could overlap with the `&[T]` overload.
+        /// but passing an `impl Iterator<T>` (or `&impl ...`) here could overlap with the `&[T]`
+        /// overload.
         ///
         /// The `overload!` macro doesn't support generics in this position yet, so we use
         /// `dyn Trait` instead.
         /// FIXME: make the macro support generic iterators, or handle `impl Iterator` correctly.
-        fn new(iter: &mut dyn Iterator<Item = c_int>) -> StdForwardList {
+        fn new(iter: &mut dyn Iterator<Item = T>) -> StdForwardList {
             StdForwardList::from_iter(iter)
         }
 
@@ -187,13 +212,23 @@ overload! {
         /// have variadic tuples, so we can't overload on the tuple trait itself.
         ///
         /// The following initializer argument counts clash with other overloads:
-        /// - 0: the default no-argument constructor
+        /// - 0: the default no-argument constructor, but this is acceptable, because the returned
+        ///   value is the empty list in both cases.
         /// - 1: the `count` default-value repetition constructor, if `T` is `size_t`
         ///   - most constructors take 1 argument, so there could be other clashes in unusual
         ///     circumstances.
         /// - 2: the `value` repetition constructor, if `T` is `size_t`
-        fn new(a: c_int, b: c_int, c: c_int) -> StdForwardList {
-            StdForwardList::from_initializer_list(a, b, c)
+        /// fn new(_a: T, _b: T, _c: T) -> StdForwardList {
+        fn new(a: T) -> StdForwardList {
+            StdForwardList::from_initializer_list_1(a)
+        }
+
+        fn new(a: T, b: T) -> StdForwardList {
+            StdForwardList::from_initializer_list_2(a, b)
+        }
+
+        fn new(a: T, b: T, c: T) -> StdForwardList {
+            StdForwardList::from_initializer_list_3(a, b, c)
         }
     }
 }
@@ -214,10 +249,12 @@ pub fn test_forward_list() {
     // The cast is required to match the overload, an iterator doesn't automatically coerce.
     // It would be more ergonomic for users to collect the iterator themselves, then use the slice
     // overload, or create a Rust/C++ iterator-to-range adapter.
-    let mut iter = [1, 2, 3].iter().copied();
+    let mut iter: std::array::IntoIter<T, 3> = [1 as T, 2, 3].into_iter();
     let _from_iter = StdForwardList::new(&mut iter as &mut dyn Iterator<Item = _>);
 
     let _ref_clone = StdForwardList::new(&default_list);
     let _mut_clone = StdForwardList::new(&mut default_list);
+    let _from_initializer_list = StdForwardList::new(1);
+    let _from_initializer_list = StdForwardList::new(1, 2);
     let _from_initializer_list = StdForwardList::new(1, 2, 3);
 }
