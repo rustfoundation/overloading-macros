@@ -1,3 +1,16 @@
+error: proc macro panicked
+   --> cpp-overload-test/examples/stdcpp-forward-list.rs:151:1
+    |
+151 | / overload! {
+152 | |     impl StdForwardList {
+153 | |         /// ### Incompatibilities
+154 | |         ///
+...   |
+165 | | }
+    | |_^
+    |
+    = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got front: &self and front: &mut self
+
 error[E0119]: conflicting implementations of trait `NewArgs<StdForwardListT>` for type `(usize,)`
   --> cpp-overload-test/examples/stdcpp-forward-list.rs:29:1
    |
@@ -31,4 +44,4 @@ error[E0119]: conflicting implementations of trait `NewArgs<StdForwardListT>` fo
    = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 For more information about this error, try `rustc --explain E0119`.
-error: could not compile `cpp-overload-test` (example "stdcpp-forward-list") due to 2 previous errors
+error: could not compile `cpp-overload-test` (example "stdcpp-forward-list") due to 3 previous errors
