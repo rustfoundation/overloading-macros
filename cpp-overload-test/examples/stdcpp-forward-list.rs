@@ -139,4 +139,29 @@ overload! {
     }
 }
 
+/// A wrapper struct to hold the returned C++ pointer, with the `W` fake generic type.
+/// We also fake the C++ list pointer with a Rust vector to help with type checking.
+#[expect(dead_code, reason = "Incompatible overloads can't be used")]
+struct StdForwardListW(Vec<W>);
+
+/// Workaround for missing generic support in the `overload!` macro.
+type W = std::ffi::c_int;
+
+// Accessors: `front(...)`
+overload! {
+    impl StdForwardList {
+        /// ### Incompatibilities
+        ///
+        /// The `overload!` macro can't overload on `&self` vs `&mut self`, because it has to
+        /// dispatch the overload through a single function, which can only have one receiver type.
+        fn front(&self) -> Option<&T> where T: Sized {
+            StdForwardList::front_const(self)
+        }
+
+        fn front(&mut self) -> Option<&mut T> where T: Sized {
+            StdForwardList::front_mut(self)
+        }
+    }
+}
+
 pub fn main() {}

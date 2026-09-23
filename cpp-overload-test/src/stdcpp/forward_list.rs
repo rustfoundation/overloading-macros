@@ -4,7 +4,10 @@
 
 use cpp::cpp;
 use splat_overload::overload;
-use std::ffi::{c_size_t, c_void};
+// ### Limitations
+//
+// We want `c_bool` here, but Rust only has `c_char`.
+use std::ffi::{c_char, c_size_t, c_void};
 use std::marker::PhantomData;
 
 // C++ header includes
@@ -21,14 +24,17 @@ cpp! {{
 ///
 /// This struct and the impl should be fully generic over the list type.
 /// FIXME: make the `overload!` macro support generics.
-struct StdForwardList(*mut c_void, PhantomData<T>);
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
+pub struct StdForwardList(*mut c_void, PhantomData<T>);
 
 /// Workaround for missing generic support in the `overload!` macro.
-type T = std::ffi::c_int;
+pub type T = std::ffi::c_int;
 
 // The cpp! macro doesn't work inside the overload! macro, so we extract C++ calls into separate methods.
 // A mature overload feature (or a production C++ project) wouldn't need this impl block.
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
 impl StdForwardList {
+    // Constructors: internal C++ implementations for `new(...)` overloads
     fn default() -> StdForwardList {
         let list = unsafe {
             cpp!([] -> *mut c_void as "std::forward_list<int>*" {
@@ -41,6 +47,11 @@ impl StdForwardList {
     fn repeat_default(count: c_size_t) -> StdForwardList {
         let list = unsafe {
             cpp!([count as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
+                // ### Ergonomics
+                //
+                // This code is potentially confusing, because it is similar to an initializer
+                // list constructor:
+                // `new std::forward_list<int>{ item }`
                 return new std::forward_list<int>(count);
             })
         };
@@ -152,29 +163,80 @@ impl StdForwardList {
         };
         StdForwardList(list, PhantomData)
     }
+
+    // Accessors: internal C++ implementations for `front(...)` overloads
+    fn front_const(&self) -> Option<&T>
+    where
+        T: Sized,
+    {
+        let slf = self.0 as *const c_void;
+        unsafe {
+            cpp!([slf as "const std::forward_list<int>*"] -> Option<&T> as "const int*" {
+                // This check is required to avoid C++ undefined behaviour on empty lists.
+                if (slf->empty()) {
+                    return nullptr;
+                } else {
+                    return &slf->front();
+                }
+            })
+        }
+    }
+
+    fn front_mut(&mut self) -> Option<&mut T>
+    where
+        T: Sized,
+    {
+        let slf: *mut c_void = self.0;
+        unsafe {
+            cpp!([slf as "std::forward_list<int>*"] -> Option<&mut T> as "int*" {
+                // This check is required to avoid C++ undefined behaviour on empty lists.
+                if (slf->empty()) {
+                    return nullptr;
+                } else {
+                    return &slf->front();
+                }
+            })
+        }
+    }
+
+    // List checks
+    fn is_empty(&self) -> bool {
+        let slf = self.0 as *const c_void;
+        let empty = unsafe {
+            cpp!([slf as "const std::forward_list<int>*"] -> c_char as "char" {
+                // `char` is FFI-safe, but Rust `bool` is not.
+                // C++ automatically promotes `bool` to `char`.
+                return slf->empty();
+            })
+        };
+        // And then we convert the `c_char` back to a valid Rust `bool`.
+        empty != 0
+    }
 }
 
+// Constructors: `new(...)`
+//
 // We ignore constructors that only differ by an allocator argument, because they're not
 // interesting overloads to test.
 overload! {
     impl StdForwardList {
         /// Construct an empty list.
-        fn new() -> StdForwardList {
+        pub fn new() -> StdForwardList {
             StdForwardList::default()
         }
 
         /// Construct a list with `count` default-constructed items.
-        fn new(count: c_size_t) -> StdForwardList {
+        pub fn new(count: c_size_t) -> StdForwardList {
             StdForwardList::repeat_default(count)
         }
 
         /// Construct a list filled with `count` instances of the given value.
-        fn new(value: T, count: c_size_t) -> StdForwardList {
+        pub fn new(value: T, count: c_size_t) -> StdForwardList {
             StdForwardList::repeat_with(value, count)
         }
 
         /// Construct a list by copying items from a slice.
-        fn new(items: &[T]) -> StdForwardList {
+        pub fn new(items: &[T]) -> StdForwardList {
             StdForwardList::from_slice(items)
         }
 
@@ -189,17 +251,17 @@ overload! {
         /// The `overload!` macro doesn't support generics in this position yet, so we use
         /// `dyn Trait` instead.
         /// FIXME: make the macro support generic iterators, or handle `impl Iterator` correctly.
-        fn new(iter: &mut dyn Iterator<Item = T>) -> StdForwardList {
+        pub fn new(iter: &mut dyn Iterator<Item = T>) -> StdForwardList {
             StdForwardList::from_iter(iter)
         }
 
         /// Clone list items into a new list from a shared list reference.
-        fn new(other: &StdForwardList) -> StdForwardList {
+        pub fn new(other: &StdForwardList) -> StdForwardList {
             StdForwardList::copy_from(other)
         }
 
         /// Move list items into a new list from a mutable list reference.
-        fn new(other: &mut StdForwardList) -> StdForwardList {
+        pub fn new(other: &mut StdForwardList) -> StdForwardList {
             StdForwardList::move_from(other)
         }
 
@@ -219,42 +281,124 @@ overload! {
         ///     circumstances.
         /// - 2: the `value` repetition constructor, if `T` is `size_t`
         /// fn new(_a: T, _b: T, _c: T) -> StdForwardList {
-        fn new(a: T) -> StdForwardList {
+        pub fn new(a: T) -> StdForwardList {
             StdForwardList::from_initializer_list_1(a)
         }
 
-        fn new(a: T, b: T) -> StdForwardList {
+        pub fn new(a: T, b: T) -> StdForwardList {
             StdForwardList::from_initializer_list_2(a, b)
         }
 
-        fn new(a: T, b: T, c: T) -> StdForwardList {
+        pub fn new(a: T, b: T, c: T) -> StdForwardList {
             StdForwardList::from_initializer_list_3(a, b, c)
         }
     }
 }
 
+// Accessors: `front(...)`
+overload! {
+    impl StdForwardList {
+        /// ### Limitations
+        ///
+        /// The `overload!` macro can't overload on `&self` vs `&mut self`, because it has to
+        /// dispatch the overload through a single function, which can only have one receiver type.
+        ///
+        /// The macro also doesn't support generic lifetimes, which are required here, because
+        /// lifetime elision doesn't work with a non-self type (in the code generated by the
+        /// macro).
+        ///
+        /// ### Workaround
+        ///
+        /// We use associated functions instead. Since `&StdForwardList` and `&mut StdForwardList`
+        /// are different types, the function can be overloaded on those types.
+        ///
+        /// To avoid generic lifetimes, we require `&'static`. This makes usage very un-ergonomic.
+        /// We could also take a `StdForwardList` and clone the element, but that doesn't work for
+        /// `&mut`.
+        ///
+        /// ### Ergonomics
+        ///
+        /// Changing the return type from `&T` to `&mut T` based on the receiver is unusual in
+        /// Rust, and is likely to cause confusion.
+        ///
+        /// ### Potential Resolutions
+        ///
+        /// Fall back to associated functions instead. Since different receivers can happen by
+        /// accident, the macro error message should suggest either:
+        /// - using the same receiver type, or
+        /// - using associated functions with different receiver types.
+        ///
+        /// Or try modifying the macro to always add the `self` receiver to the list of overloaded
+        /// types.
+        pub fn front(this: &'static StdForwardList) -> Option<&'static T> where T: Sized {
+            StdForwardList::front_const(this)
+        }
+
+        pub fn front(this: &'static mut StdForwardList) -> Option<&'static mut T> where T: Sized {
+            StdForwardList::front_mut(this)
+        }
+    }
+}
+
+#[test]
 pub fn test_forward_list() {
+    // Constructors: `new(...)`
     let mut default_list = StdForwardList::new();
-    let _repeat_default = StdForwardList::new(10);
-    let _repeat_with = StdForwardList::new(42, 100);
+    assert!(default_list.is_empty());
+
+    // ### Ergonomics
+    //
+    // This overload is easily confused with the single-argument "add item" overload.
+    //
+    // These `StdForwardList` type annotations are currently required, but inference should work.
+    // FIXME: fix the macro or `splat` compiler implementation so inference works here.
+    let repeat_default: StdForwardList = StdForwardList::new(10_usize);
+    assert_eq!(repeat_default.front_const(), Some(&0));
+
+    let repeat_with: StdForwardList = StdForwardList::new(42, 100);
+    assert_eq!(repeat_with.front_const(), Some(&42));
 
     // ### Limitations
     //
     // The `as_slice` call is required to match the overload, an array doesn't automatically coerce.
     // FIXME: maybe add a const generic overload for arrays.
-    let _from_slice = StdForwardList::new([1, 2, 3].as_slice());
+    let from_slice = StdForwardList::new([1, 2, 3].as_slice());
+    assert_eq!(from_slice.front_const(), Some(&1));
 
     // ### Limitations
     //
     // The cast is required to match the overload, an iterator doesn't automatically coerce.
     // It would be more ergonomic for users to collect the iterator themselves, then use the slice
     // overload, or create a Rust/C++ iterator-to-range adapter.
-    let mut iter: std::array::IntoIter<T, 3> = [1 as T, 2, 3].into_iter();
-    let _from_iter = StdForwardList::new(&mut iter as &mut dyn Iterator<Item = _>);
+    let mut iter: std::array::IntoIter<T, 3> = [1, 2, 3].into_iter();
+    let from_iter = StdForwardList::new(&mut iter as &mut dyn Iterator<Item = _>);
+    assert_eq!(from_iter.front_const(), Some(&1));
 
-    let _ref_clone = StdForwardList::new(&default_list);
-    let _mut_clone = StdForwardList::new(&mut default_list);
-    let _from_initializer_list = StdForwardList::new(1);
-    let _from_initializer_list = StdForwardList::new(1, 2);
-    let _from_initializer_list = StdForwardList::new(1, 2, 3);
+    let ref_clone = StdForwardList::new(&default_list);
+    assert!(ref_clone.is_empty());
+    let mut_clone = StdForwardList::new(&mut default_list);
+    assert!(mut_clone.is_empty());
+
+    let from_initializer_list: StdForwardList = StdForwardList::new(1);
+    assert_eq!(from_initializer_list.front_const(), Some(&1));
+    let from_initializer_list: StdForwardList = StdForwardList::new(2, 1);
+    assert_eq!(from_initializer_list.front_const(), Some(&2));
+    let from_initializer_list = StdForwardList::new(3, 2, 1);
+    assert_eq!(from_initializer_list.front_const(), Some(&3));
+
+    // ### Workaround
+    //
+    // Leak these lists to get static references to them. This would never work in production.
+    let static_ref =
+        |list: StdForwardList| -> &'static StdForwardList { &*Box::leak(Box::new(list)) };
+    let static_mut =
+        |list: StdForwardList| -> &'static mut StdForwardList { Box::leak(Box::new(list)) };
+
+    assert_eq!(StdForwardList::front(static_ref(ref_clone)), None);
+    assert_eq!(StdForwardList::front(static_mut(mut_clone)), None);
+    assert_eq!(StdForwardList::front(static_ref(repeat_default)), Some(&0));
+    assert_eq!(
+        StdForwardList::front(static_mut(repeat_with)),
+        Some(&mut 42)
+    );
 }
