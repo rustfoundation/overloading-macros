@@ -7,6 +7,12 @@ Technical details for the current stage of the experiment can be found [on the I
 
 Most of this code requires a recent nightly Rust compiler.
 
+## Experimental Outcomes
+
+Some outcomes of this experiment are summarised in the [C++ overloads in Rust](https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overloads-in-rust.md) document & compatibility table.
+
+These outcomes are based on the current state of the experimental compiler feature and overloading macro: they are not Rust language design decisions.
+
 ## Macro Setup
 
 Install a recent version of the nightly Rust compiler, and use it to build your project.
