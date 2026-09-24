@@ -1,4 +1,10 @@
-//! Test C++ overloads that can't be represented in Rust, and record the macro diagnostics.
+//! Test C++ [std::forward_list][forward_list] overloads that can't be represented in Rust, and record the macro diagnostics.
+//! Error output is in [stdcpp-forward-list.stderr].
+//! Working overloads are in [forward_list.rs].
+//!
+//! [forward_list]: https://en.cppreference.com/cpp/container/forward_list
+//! [stdcpp-forward-list.stderr]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/examples/stdcpp-forward-list.stderr
+//! [forward_list.rs]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 //!
 //! The `cpp!` macro doesn't work here, because of technical limitations it can only run one build
 //! per crate. (Examples and binaries are built separately from `lib.rs`.)

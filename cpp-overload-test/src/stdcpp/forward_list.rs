@@ -1,4 +1,9 @@
-//! Test that C++ overloads for `std::forward_list` can be successfully represented in Rust.
+//! Test that C++ overloads for [std::forward_list][forward_list] can be successfully represented in Rust.
+//! Failing overloads are in [stdcpp-forward-list.rs], and error output is in [stdcpp-forward-list.stderr].
+//!
+//! [forward_list]: https://en.cppreference.com/cpp/container/forward_list
+//! [stdcpp-forward-list.rs]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/examples/stdcpp-forward-list.rs
+//! [stdcpp-forward-list.stderr]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/examples/stdcpp-forward-list.stderr
 
 #![allow(unused_braces)]
 
