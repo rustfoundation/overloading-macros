@@ -21,6 +21,10 @@ cpp! {{
     #include <vector>
     #include <ranges>
     #include <cstddef>
+
+    // The `cpp!` macro can't handle C/C++ function type syntax, so we have to declare function
+    // types here.
+    typedef bool BinaryPredicate(const int&, const int&);
 }}
 
 /// A wrapper struct to hold the returned C++ pointer.
@@ -223,7 +227,27 @@ impl StdForwardList {
         }
     }
 
-    // List checks
+    fn unique_equals(&mut self) -> c_size_t {
+        let slf: *mut c_void = self.0;
+        unsafe {
+            cpp!([slf as "std::forward_list<int>*"] -> c_size_t as "size_t" {
+                return slf->unique();
+            })
+        }
+    }
+
+    fn unique_with(&mut self, eq_predicate: extern "C" fn(&T, &T) -> bool) -> c_size_t {
+        let slf: *mut c_void = self.0;
+        unsafe {
+            // The `cpp!` macro can't handle C/C++ function type syntax, so we have to declare the
+            // type separately above.
+            cpp!([slf as "std::forward_list<int>*", eq_predicate as "BinaryPredicate*"] -> c_size_t as "size_t" {
+                return slf->unique(eq_predicate);
+            })
+        }
+    }
+
+    // List checks (not overloaded)
     fn is_empty(&self) -> bool {
         let slf = self.0 as *const c_void;
         let empty = unsafe {
@@ -383,6 +407,23 @@ overload! {
     }
 }
 
+overload! {
+    impl StdForwardList {
+        /// Remove all consecutive duplicate elements from the list.
+        /// Returns the number of elements removed.
+        pub fn unique(&mut self) -> c_size_t {
+            self.unique_equals()
+        }
+
+        /// Remove all consecutive duplicate elements from the list, using the given predicate to
+        /// compare elements as equal.
+        /// Returns the number of elements removed.
+        pub fn unique(&mut self, eq_predicate: extern "C" fn(&T, &T) -> bool) -> c_size_t {
+            self.unique_with(eq_predicate)
+        }
+    }
+}
+
 #[test]
 pub fn test_forward_list() {
     // Constructors: `new(...)`
@@ -453,4 +494,15 @@ pub fn test_forward_list() {
     let mut resized_list = StdForwardList::new();
     resized_list.resize(1, 42);
     assert_eq!(resized_list.front_const(), Some(&42));
+
+    let mut unique_list = StdForwardList::new([1, 2, 2, 3, 3, 3, 1].as_slice());
+    assert_eq!(unique_list.unique(), 3);
+    assert_eq!(unique_list.front_const(), Some(&1));
+
+    let mut unique_list = StdForwardList::new([1, 2, 2, 3, 3, 3, 1].as_slice());
+    extern "C" fn predicate(a: &T, b: &T) -> bool {
+        a == b
+    }
+    assert_eq!(unique_list.unique(predicate), 3);
+    assert_eq!(unique_list.front_const(), Some(&1));
 }
