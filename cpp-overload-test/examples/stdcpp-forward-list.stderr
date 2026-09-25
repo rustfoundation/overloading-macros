@@ -1,25 +1,25 @@
 error: proc macro panicked
-   --> cpp-overload-test/examples/stdcpp-forward-list.rs:151:1
+   --> cpp-overload-test/examples/stdcpp-forward-list.rs:157:1
     |
-151 | / overload! {
-152 | |     impl StdForwardList {
-153 | |         /// ### Incompatibilities
-154 | |         ///
+157 | / overload! {
+158 | |     impl StdForwardList {
+159 | |         /// ### Incompatibilities
+160 | |         ///
 ...   |
-165 | | }
+171 | | }
     | |_^
     |
     = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got front: &self and front: &mut self
 
 error[E0119]: conflicting implementations of trait `NewArgs<StdForwardListT>` for type `(usize,)`
-  --> cpp-overload-test/examples/stdcpp-forward-list.rs:29:1
+  --> cpp-overload-test/examples/stdcpp-forward-list.rs:35:1
    |
-29 | / overload! {
-30 | |     impl StdForwardListT {
-31 | |         /// Construct a list with `count` default-constructed items.
-32 | |         fn new(_count: c_size_t) -> StdForwardListT {
+35 | / overload! {
+36 | |     impl StdForwardListT {
+37 | |         /// Construct a list with `count` default-constructed items.
+38 | |         fn new(_count: c_size_t) -> StdForwardListT {
 ...  |
-65 | | }
+71 | | }
    | | ^
    | | |
    | |_first implementation here
@@ -28,14 +28,14 @@ error[E0119]: conflicting implementations of trait `NewArgs<StdForwardListT>` fo
    = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0119]: conflicting implementations of trait `NewArgs<StdForwardListT>` for type `(usize, usize)`
-  --> cpp-overload-test/examples/stdcpp-forward-list.rs:29:1
+  --> cpp-overload-test/examples/stdcpp-forward-list.rs:35:1
    |
-29 | / overload! {
-30 | |     impl StdForwardListT {
-31 | |         /// Construct a list with `count` default-constructed items.
-32 | |         fn new(_count: c_size_t) -> StdForwardListT {
+35 | / overload! {
+36 | |     impl StdForwardListT {
+37 | |         /// Construct a list with `count` default-constructed items.
+38 | |         fn new(_count: c_size_t) -> StdForwardListT {
 ...  |
-65 | | }
+71 | | }
    | | ^
    | | |
    | |_first implementation here
