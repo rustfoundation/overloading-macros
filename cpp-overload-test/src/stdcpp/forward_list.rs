@@ -208,6 +208,31 @@ impl StdForwardList {
         }
     }
 
+    // Modifiers: internal implementations for `merge(...)`
+    fn merge_from(self: &mut StdForwardList, other: &mut StdForwardList) {
+        let slf: *mut c_void = self.0;
+        let other: *mut c_void = other.0;
+        unsafe {
+            cpp!([slf as "std::forward_list<int>*", other as "std::forward_list<int>*"] {
+                slf->merge(*other);
+            })
+        }
+    }
+
+    fn merge_with(
+        self: &mut StdForwardList,
+        other: &mut StdForwardList,
+        less_than_predicate: extern "C" fn(&T, &T) -> bool,
+    ) {
+        let slf: *mut c_void = self.0;
+        let other: *mut c_void = other.0;
+        unsafe {
+            cpp!([slf as "std::forward_list<int>*", other as "std::forward_list<int>*", less_than_predicate as "BinaryPredicate*"] {
+                slf->merge(*other, less_than_predicate);
+            })
+        }
+    }
+
     // Transforms: internal implementations for `resize(...)`, `unique(...)`
     fn resize_default(&mut self, count: c_size_t) {
         let slf: *mut c_void = self.0;
@@ -391,6 +416,23 @@ overload! {
     }
 }
 
+// Modifiers: `merge(...)`
+overload! {
+    impl StdForwardList {
+        /// Move elements from `other` into this list, preserving sort order.
+        /// Both lists must be sorted.
+        pub fn merge(&mut self, other: &mut StdForwardList) {
+            self.merge_from(other)
+        }
+
+        /// Move elements from `other` into this list, preserving sort order with the given
+        /// predicate. Both lists must be sorted according to that predicate.
+        pub fn merge(&mut self, other: &mut StdForwardList, less_than_predicate: extern "C" fn(&T, &T) -> bool) {
+            self.merge_with(other, less_than_predicate)
+        }
+    }
+}
+
 // Transforms: `resize(...)`, `unique(...)`
 // We skip `sort(...)` because its argument set is almost identical to `unique(...)`.
 overload! {
@@ -487,6 +529,21 @@ pub fn test_forward_list() {
         StdForwardList::front(static_mut(repeat_with)),
         Some(&mut 42)
     );
+
+    // Modifiers: `merge(...)`
+    let mut merge_into_list = StdForwardList::new([1, 3, 5].as_slice());
+    let mut merge_from_list = StdForwardList::new([0, 2, 4, 6].as_slice());
+    merge_into_list.merge(&mut merge_from_list);
+    assert_eq!(merge_into_list.front_const(), Some(&0));
+
+    let mut merge_into_list = StdForwardList::new([5, 3, 1].as_slice());
+    let mut merge_from_list = StdForwardList::new([6, 4, 2, 0].as_slice());
+    // This predicate is deliberately inverted.
+    extern "C" fn more_than_predicate(a: &T, b: &T) -> bool {
+        a > b
+    }
+    merge_into_list.merge(&mut merge_from_list, more_than_predicate);
+    assert_eq!(merge_into_list.front_const(), Some(&6));
 
     // Transforms: `resize(...)`, `unique(...)`
     from_slice.resize(0);
