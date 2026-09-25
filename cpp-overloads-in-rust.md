@@ -19,15 +19,15 @@ See the Limitations section below the table for more details.
 ？ Needs Analysis<br/>
 *blank* No C++ Overloads<br/>
 
-| C++ Standard Library Class | Constructors | Accessors | Modifiers | Transforms |
-| :------------------------- | :----------- | :-------- | :-------- | :--------- |
-| *Free Functions*           | Constructors | Accessors | Modifiers | Transforms |
-| TODO                       |              | ？        |  ？       | ？         |
-| *Non-Template Classes*     | Constructors | Accessors | Modifiers | Transforms |
-| TODO                       | ？           | ？        |  ？       | ？         |
-| *Template Classes*         | Constructors | Accessors | Modifiers | Transforms |
-| [forward_list]             | ✅           | 🌗⚙️      | ？        | ？[^1]     |
-| TODO                       | ？           | ？        |  ？       | ？         |
+| C++ Standard Library Class | Constructors | Accessors | Modifiers  | Transforms |
+| :------------------------- | :----------- | :-------- | :--------- | :--------- |
+| *Free Functions*           | Constructors | Accessors | Modifiers  | Transforms |
+| TODO                       |              | ？        |  ？        | ？         |
+| *Non-Template Classes*     | Constructors | Accessors | Modifiers  | Transforms |
+| TODO                       | ？           | ？        |  ？        | ？         |
+| *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
+| [forward_list]             | ✅           | 🌗⚙️      | 🌗⚙️？[^1] | ✅         |
+| TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
 Accessors: Get information about the class, called as `instance->get(...)`<br/>
@@ -36,7 +36,7 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 
-[^1]: TODO: are [C++ predicate functions](https://en.cppreference.com/cpp/container/forward_list/unique) with const refs ABI-compatible with Rust?
+[^1]: Mostly caused by the differences between Rust and C++ iterators, could be overcome with type wrappers.
 
 ## Limitations
 
