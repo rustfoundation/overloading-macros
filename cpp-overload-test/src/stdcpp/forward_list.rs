@@ -303,6 +303,8 @@ overload! {
 // Accessors: `front(...)`
 overload! {
     impl StdForwardList {
+        /// Get the first element of the list as a constant reference.
+        ///
         /// ### Limitations
         ///
         /// The `overload!` macro can't overload on `&self` vs `&mut self`, because it has to
@@ -391,6 +393,8 @@ pub fn test_forward_list() {
     let from_initializer_list = StdForwardList::new(3, 2, 1);
     assert_eq!(from_initializer_list.front_const(), Some(&3));
 
+    // Accessors: `front(...)`
+    //
     // ### Workaround
     //
     // Leak these lists to get static references to them. This would never work in production.

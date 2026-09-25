@@ -101,3 +101,14 @@ These overloads have no equivalent in Rust:
   (`before_begin`/`begin`/`end`/`after_end`)
 - initializer list methods: these are also a common source of overload conflicts for C++ templated
   lists
+
+#### Equivalences & Supersets
+
+When the same overloaded functions are available on different classes, we only analyse the overload
+on one of those classes.
+
+When one overloaded function takes the same argument sets (or a subset of the argument set) of
+another overloaded function, we only analyse one of the argument sets. For example,
+`unique()`/`unique(predicate)` and `sort()`/`sort(predicate)`.
+
+In some cases, we focus on the most "difficult" overload in a category, and skip the rest.
