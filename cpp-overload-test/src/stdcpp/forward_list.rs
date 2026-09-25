@@ -204,6 +204,25 @@ impl StdForwardList {
         }
     }
 
+    // Transforms: internal implementations for `resize(...)`, `unique(...)`
+    fn resize_default(&mut self, count: c_size_t) {
+        let slf: *mut c_void = self.0;
+        unsafe {
+            cpp!([slf as "std::forward_list<int>*", count as "size_t"] {
+                slf->resize(count);
+            })
+        }
+    }
+
+    fn resize_with(&mut self, count: c_size_t, value: T) {
+        let slf: *mut c_void = self.0;
+        unsafe {
+            cpp!([slf as "std::forward_list<int>*", count as "size_t", value as "int"] {
+                slf->resize(count, value);
+            })
+        }
+    }
+
     // List checks
     fn is_empty(&self) -> bool {
         let slf = self.0 as *const c_void;
@@ -341,8 +360,25 @@ overload! {
             StdForwardList::front_const(this)
         }
 
+        /// Get the first element of the list as a mutable reference.
         pub fn front(this: &'static mut StdForwardList) -> Option<&'static mut T> where T: Sized {
             StdForwardList::front_mut(this)
+        }
+    }
+}
+
+// Transforms: `resize(...)`, `unique(...)`
+// We skip `sort(...)` because its argument set is almost identical to `unique(...)`.
+overload! {
+    impl StdForwardList {
+        /// Resize the list to the given size, filling any new elements with the default value.
+        pub fn resize(&mut self, count: c_size_t) {
+            self.resize_default(count)
+        }
+
+        /// Resize the list to the given size, filling any new elements with the given value.
+        pub fn resize(&mut self, count: c_size_t, value: T) {
+            self.resize_with(count, value)
         }
     }
 }
@@ -369,7 +405,7 @@ pub fn test_forward_list() {
     //
     // The `as_slice` call is required to match the overload, an array doesn't automatically coerce.
     // FIXME: maybe add a const generic overload for arrays.
-    let from_slice = StdForwardList::new([1, 2, 3].as_slice());
+    let mut from_slice = StdForwardList::new([1, 2, 3].as_slice());
     assert_eq!(from_slice.front_const(), Some(&1));
 
     // ### Limitations
@@ -410,4 +446,11 @@ pub fn test_forward_list() {
         StdForwardList::front(static_mut(repeat_with)),
         Some(&mut 42)
     );
+
+    // Transforms: `resize(...)`, `unique(...)`
+    from_slice.resize(0);
+    assert!(from_slice.is_empty());
+    let mut resized_list = StdForwardList::new();
+    resized_list.resize(1, 42);
+    assert_eq!(resized_list.front_const(), Some(&42));
 }
