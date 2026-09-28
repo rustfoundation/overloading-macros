@@ -466,6 +466,7 @@ overload! {
     }
 }
 
+/// These tests show that the correct Rust and C++ overloads are being called.
 #[test]
 pub fn test_forward_list() {
     // Constructors: `new(...)`
