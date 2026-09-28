@@ -24,10 +24,13 @@ cpp! {{
 
     // The `cpp!` macro can't handle C/C++ function type syntax, so we have to declare function
     // types here.
-    typedef bool BinaryPredicate(const int&, const int&);
+    typedef bool BinaryPredicateCpp(const int&, const int&);
 }}
 
-/// A wrapper struct to hold the returned C++ pointer.
+/// An ABI-compatible Rust function type for `BinaryPredicateCpp`.
+pub type BinaryPredicateRust = extern "C" fn(&T, &T) -> bool;
+
+/// A wrapper struct to hold the returned C++ `std::forward_list<int>` pointer.
 ///
 /// ### Limitations
 ///
@@ -226,12 +229,14 @@ impl StdForwardList {
     fn merge_with(
         self: &mut StdForwardList,
         other: &mut StdForwardList,
-        less_than_predicate: extern "C" fn(&T, &T) -> bool,
+        less_than_predicate: BinaryPredicateRust,
     ) {
         let slf: *mut c_void = self.0;
         let other: *mut c_void = other.0;
         unsafe {
-            cpp!([slf as "std::forward_list<int>*", other as "std::forward_list<int>*", less_than_predicate as "BinaryPredicate*"] {
+            // Function types are function pointers in Rust, but in C++ function types are objects,
+            // so we need to convert the Rust type to a C++ pointer to function type.
+            cpp!([slf as "std::forward_list<int>*", other as "std::forward_list<int>*", less_than_predicate as "BinaryPredicateCpp*"] {
                 slf->merge(*other, less_than_predicate);
             })
         }
@@ -265,12 +270,12 @@ impl StdForwardList {
         }
     }
 
-    fn unique_with(&mut self, eq_predicate: extern "C" fn(&T, &T) -> bool) -> c_size_t {
+    fn unique_with(&mut self, eq_predicate: BinaryPredicateRust) -> c_size_t {
         let slf: *mut c_void = self.0;
         unsafe {
             // The `cpp!` macro can't handle C/C++ function type syntax, so we have to declare the
             // type separately above.
-            cpp!([slf as "std::forward_list<int>*", eq_predicate as "BinaryPredicate*"] -> c_size_t as "size_t" {
+            cpp!([slf as "std::forward_list<int>*", eq_predicate as "BinaryPredicateCpp*"] -> c_size_t as "size_t" {
                 return slf->unique(eq_predicate);
             })
         }
@@ -431,7 +436,7 @@ overload! {
 
         /// Move elements from `other` into this list, preserving sort order with the given
         /// predicate. Both lists must be sorted according to that predicate.
-        pub fn merge(&mut self, other: &mut StdForwardList, less_than_predicate: extern "C" fn(&T, &T) -> bool) {
+        pub fn merge(&mut self, other: &mut StdForwardList, less_than_predicate: BinaryPredicateRust) {
             self.merge_with(other, less_than_predicate)
         }
     }
@@ -464,7 +469,7 @@ overload! {
         /// Remove all consecutive duplicate elements from the list, using the given predicate to
         /// compare elements as equal.
         /// Returns the number of elements removed.
-        pub fn unique(&mut self, eq_predicate: extern "C" fn(&T, &T) -> bool) -> c_size_t {
+        pub fn unique(&mut self, eq_predicate: BinaryPredicateRust) -> c_size_t {
             self.unique_with(eq_predicate)
         }
     }
