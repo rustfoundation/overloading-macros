@@ -85,6 +85,24 @@ impl StdForwardListIter<&mut T> {
     }
 }
 
+impl<'list> StdForwardListIter<&'list mut T> {
+    /// Downgrade this mutable iterator to a constant iterator.
+    ///
+    /// ### Safety
+    ///
+    /// This is safe because we already hold a mutable iterator, which was derived from a Rust
+    /// exclusive reference to the list.
+    fn downgrade(self) -> StdForwardListIter<&'list T> {
+        let iter: *mut c_void = self.0;
+        let iter = unsafe {
+            cpp!([iter as "std::forward_list<int>::iterator"] -> *mut c_void as "std::forward_list<int>::const_iterator" {
+                return iter;
+            })
+        };
+        StdForwardListIter(iter, PhantomData)
+    }
+}
+
 // The cpp! macro doesn't work inside the overload! macro, so we extract C++ calls into separate methods.
 // A mature overload feature (or a production C++ project) wouldn't need this impl block.
 #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
@@ -318,6 +336,11 @@ impl StdForwardList {
 
     /// Returns a mutable iterator to a placeholder "element" *after* the end of the list.
     /// Accessing this placeholder element is undefined behaviour.
+    ///
+    /// ### Limitations
+    ///
+    /// Having mutable access to a placeholder element makes no sense in Rust, and the ergonomics
+    /// of holding two mutable references into the same list are poor.
     fn end_mut(&mut self) -> StdForwardListIter<&mut T> {
         let slf: *mut c_void = self.0;
         let iter = unsafe {
@@ -705,6 +728,13 @@ pub fn test_forward_list() {
     assert_eq!(
         StdForwardList::begin(static_mut(begin_list)).access(),
         Some(&mut 1)
+    );
+    let begin_list = StdForwardList::new([1, 2, 3].as_slice());
+    assert_eq!(
+        StdForwardList::begin(static_mut(begin_list))
+            .downgrade()
+            .access(),
+        Some(&1)
     );
 
     let from_cpp_iter_list = StdForwardList::new([5, 6, 7, 8].as_slice());
