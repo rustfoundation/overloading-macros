@@ -51,6 +51,7 @@ pub struct StdForwardListIter<ItemRef>(*mut c_void, PhantomData<ItemRef>);
 
 // These overloads do not need the `overload!` macro.
 // TODO: manually rewrite the other `&`/`&mut` overloads in this way, or make the macro do it.
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
 impl StdForwardListIter<&T> {
     /// Access the element at the current iterator position as a constant reference.
     ///
@@ -68,6 +69,7 @@ impl StdForwardListIter<&T> {
     }
 }
 
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
 impl StdForwardListIter<&mut T> {
     /// Access the element at the current iterator position as a mutable reference.
     ///
@@ -85,6 +87,7 @@ impl StdForwardListIter<&mut T> {
     }
 }
 
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
 impl<'list> StdForwardListIter<&'list mut T> {
     /// Downgrade this mutable iterator to a constant iterator.
     ///
