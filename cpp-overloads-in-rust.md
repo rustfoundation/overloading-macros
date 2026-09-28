@@ -97,8 +97,7 @@ These overloads have no equivalent in Rust:
 
 - assignment functions, assignment operators, and `swap`: there is no "type move method" in Rust
   (it uses `memcpy` for assignment/swaps)
-- legacy iterator pointer-like methods for various positions
-  (`before_begin`/`begin`/`end`/`after_end`)
+- legacy iterator pointer-like methods for various positions (`before_begin`/`begin`/`end`)
 - initializer list methods: these are also a common source of overload conflicts for C++ templated
   lists
 
