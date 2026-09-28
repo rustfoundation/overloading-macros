@@ -42,6 +42,49 @@ pub struct StdForwardList(*mut c_void, PhantomData<T>);
 /// Workaround for missing generic support in the `overload!` macro.
 pub type T = std::ffi::c_int;
 
+/// A wrapper struct to hold C++ `std::forward_list<int>::iterator/const_iterator` objects.
+/// `ItemRef` is either `&'list T` or `&mut 'list T`, depending on the iterator type.
+///
+/// This generic type allows mutable iterators to be passed in place of constant iterators.
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
+pub struct StdForwardListIter<ItemRef>(*mut c_void, PhantomData<ItemRef>);
+
+// These overloads do not need the `overload!` macro.
+// TODO: manually rewrite the other `&`/`&mut` overloads in this way, or make the macro do it.
+impl StdForwardListIter<&T> {
+    /// Access the element at the current iterator position as a constant reference.
+    ///
+    /// ### Safety
+    ///
+    /// Accessing `end` iterators, or any invalid iterator, is undefined behaviour.
+    /// FIXME: check for end iterators and other invalid iterators, or mark this method as unsafe.
+    fn access(&self) -> Option<&T> {
+        let iter = self.0 as *const c_void;
+        unsafe {
+            cpp!([iter as "std::forward_list<int>::const_iterator"] -> Option<&T> as "const int*" {
+                return &*iter;
+            })
+        }
+    }
+}
+
+impl StdForwardListIter<&mut T> {
+    /// Access the element at the current iterator position as a mutable reference.
+    ///
+    /// ### Safety
+    ///
+    /// Accessing `end` iterators, or any invalid iterator, is undefined behaviour.
+    /// FIXME: check for end iterators and other invalid iterators, or mark this method as unsafe.
+    fn access(&mut self) -> Option<&mut T> {
+        let iter: *mut c_void = self.0;
+        unsafe {
+            cpp!([iter as "std::forward_list<int>::iterator"] -> Option<&mut T> as "int*" {
+                return &*iter;
+            })
+        }
+    }
+}
+
 // The cpp! macro doesn't work inside the overload! macro, so we extract C++ calls into separate methods.
 // A mature overload feature (or a production C++ project) wouldn't need this impl block.
 #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
@@ -87,7 +130,6 @@ impl StdForwardList {
     ///
     /// The slice satisfies C++ `ContiguousIterator`, even though it's not a requirement for this
     /// C++ iterator overload.
-    /// FIXME: allow non-contiguous iterators, if that makes sense in Rust.
     fn from_slice(items: &[T]) -> StdForwardList {
         let len = items.len();
         let items: *const T = items.as_ptr();
@@ -95,6 +137,21 @@ impl StdForwardList {
             cpp!([items as "const int*", len as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
                 // In C++, `items + len` increments the pointer by `len` elements of `sizeof(int)`.
                 return new std::forward_list<int>(items, items + len);
+            })
+        };
+        StdForwardList(list, PhantomData)
+    }
+
+    /// Construct a list from a C++ iterator range `[first, last)`, excluding the element at `last`.
+    fn from_cpp_iter(
+        first: &StdForwardListIter<&T>,
+        last: &StdForwardListIter<&T>,
+    ) -> StdForwardList {
+        let first = first.0 as *const c_void;
+        let last = last.0 as *const c_void;
+        let list = unsafe {
+            cpp!([first as "std::forward_list<int>::const_iterator", last as "std::forward_list<int>::const_iterator"] -> *mut c_void as "std::forward_list<int>*" {
+                return new std::forward_list<int>(first, last);
             })
         };
         StdForwardList(list, PhantomData)
@@ -108,6 +165,10 @@ impl StdForwardList {
     ///
     /// This implementation builds a Rust `Vec` and C++ `std::vector` from the iterator for simplicity.
     /// A production implementation could use a Rust-to-C++ iterator-to-range adapter.
+    ///
+    /// ### Workarounds
+    ///
+    /// This could be done using C++ iterators, see `from_cpp_iter` above.
     fn from_iter(iter: &mut dyn Iterator<Item = T>) -> StdForwardList {
         let items: Vec<T> = iter.collect();
         let len = items.len();
@@ -180,7 +241,7 @@ impl StdForwardList {
         StdForwardList(list, PhantomData)
     }
 
-    // Accessors: internal C++ implementations for `front(...)` overloads
+    // Accessors: internal C++ implementations for `front(...)`, `begin(...)`, `end(...)` overloads
     fn front_const(&self) -> Option<&T>
     where
         T: Sized,
@@ -213,6 +274,58 @@ impl StdForwardList {
                 }
             })
         }
+    }
+
+    /// Returns a constant iterator to the first element of the list.
+    fn begin_const(&self) -> StdForwardListIter<&T> {
+        let slf = self.0 as *const c_void;
+        let iter = unsafe {
+            // We deliberately cast away the const here, to account for C++ interior mutability.
+            // FIXME: is the returned type always a pointer type?
+            cpp!([slf as "const std::forward_list<int>*"] -> *mut c_void as "const std::forward_list<int>::const_iterator" {
+                // Or cbegin()
+                return slf->begin();
+            })
+        };
+        StdForwardListIter(iter, PhantomData)
+    }
+
+    /// Returns a mutable iterator to the first element of the list.
+    fn begin_mut(&mut self) -> StdForwardListIter<&mut T> {
+        let slf: *mut c_void = self.0;
+        let iter = unsafe {
+            // FIXME: is the returned type always a pointer type?
+            cpp!([slf as "std::forward_list<int>*"] -> *mut c_void as "std::forward_list<int>::iterator" {
+                return slf->begin();
+            })
+        };
+        StdForwardListIter(iter, PhantomData)
+    }
+
+    /// Returns a constant iterator to a placeholder "element" *after* the end of the list.
+    /// Accessing this placeholder element is undefined behaviour.
+    fn end_const(&self) -> StdForwardListIter<&T> {
+        let slf = self.0 as *const c_void;
+        let iter = unsafe {
+            // We deliberately cast away the const here, to account for C++ interior mutability.
+            cpp!([slf as "const std::forward_list<int>*"] -> *mut c_void as "const std::forward_list<int>::const_iterator" {
+                // Or cend()
+                return slf->end();
+            })
+        };
+        StdForwardListIter(iter, PhantomData)
+    }
+
+    /// Returns a mutable iterator to a placeholder "element" *after* the end of the list.
+    /// Accessing this placeholder element is undefined behaviour.
+    fn end_mut(&mut self) -> StdForwardListIter<&mut T> {
+        let slf: *mut c_void = self.0;
+        let iter = unsafe {
+            cpp!([slf as "std::forward_list<int>*"] -> *mut c_void as "std::forward_list<int>::iterator" {
+                return slf->end();
+            })
+        };
+        StdForwardListIter(iter, PhantomData)
     }
 
     // Modifiers: internal implementations for `merge(...)`
@@ -322,6 +435,11 @@ overload! {
             StdForwardList::from_slice(items)
         }
 
+        /// Construct a list from a C++ iterator range `[first, last)`, excluding the element at `last`.
+        pub fn new(first: &StdForwardListIter<&T>, last: &StdForwardListIter<&T>) -> StdForwardList {
+            StdForwardList::from_cpp_iter(first, last)
+        }
+
         /// Construct a list from an iterator.
         ///
         /// ### Limitations
@@ -377,7 +495,7 @@ overload! {
     }
 }
 
-// Accessors: `front(...)`
+// Accessors: `front(...)`, `begin(...)`, `end(...)`
 overload! {
     impl StdForwardList {
         /// Get the first element of the list as a constant reference.
@@ -421,6 +539,44 @@ overload! {
         /// Get the first element of the list as a mutable reference.
         pub fn front(this: &'static mut StdForwardList) -> Option<&'static mut T> where T: Sized {
             StdForwardList::front_mut(this)
+        }
+    }
+}
+
+overload! {
+    impl StdForwardList {
+        /// Get a constant iterator to the first element of the list.
+        ///
+        /// ### Limitations
+        ///
+        /// Same as `front(...)`.
+        pub fn begin(this: &'static StdForwardList) -> StdForwardListIter<&'static T> {
+            StdForwardList::begin_const(this)
+        }
+
+        /// Get a mutable iterator to the first element of the list.
+        pub fn begin(this: &'static mut StdForwardList) -> StdForwardListIter<&'static mut T> {
+            StdForwardList::begin_mut(this)
+        }
+    }
+}
+
+overload! {
+    impl StdForwardList {
+        /// Get a constant iterator to a placeholder "element" *after* the end of the list.
+        /// Accessing this placeholder element is undefined behaviour.
+        ///
+        /// ### Limitations
+        ///
+        /// Same as `front(...)`, with an added risk of undefined behaviour.
+        pub fn end(this: &'static StdForwardList) -> StdForwardListIter<&'static T> {
+            StdForwardList::end_const(this)
+        }
+
+        /// Get a mutable iterator to a placeholder "element" *after* the end of the list.
+        /// Accessing this placeholder element is undefined behaviour.
+        pub fn end(this: &'static mut StdForwardList) -> StdForwardListIter<&'static mut T> {
+            StdForwardList::end_mut(this)
         }
     }
 }
@@ -522,7 +678,7 @@ pub fn test_forward_list() {
     let from_initializer_list = StdForwardList::new(3, 2, 1);
     assert_eq!(from_initializer_list.front_const(), Some(&3));
 
-    // Accessors: `front(...)`
+    // Accessors: `front(...)`, `begin(...)`, `end(...)`
     //
     // ### Workaround
     //
@@ -539,6 +695,25 @@ pub fn test_forward_list() {
         StdForwardList::front(static_mut(repeat_with)),
         Some(&mut 42)
     );
+
+    let begin_list = StdForwardList::new([1, 2, 3].as_slice());
+    assert_eq!(
+        StdForwardList::begin(static_ref(begin_list)).access(),
+        Some(&1)
+    );
+    let begin_list = StdForwardList::new([1, 2, 3].as_slice());
+    assert_eq!(
+        StdForwardList::begin(static_mut(begin_list)).access(),
+        Some(&mut 1)
+    );
+
+    let from_cpp_iter_list = StdForwardList::new([5, 6, 7, 8].as_slice());
+    let workaround_static_ref = static_ref(from_cpp_iter_list);
+    let from_cpp_iter = StdForwardList::new(
+        &StdForwardList::begin(workaround_static_ref),
+        &StdForwardList::end(workaround_static_ref),
+    );
+    assert_eq!(from_cpp_iter.front_const(), Some(&5));
 
     // Modifiers: `merge(...)`
     let mut merge_into_list = StdForwardList::new([1, 3, 5].as_slice());

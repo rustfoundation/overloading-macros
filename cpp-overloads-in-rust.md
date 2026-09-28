@@ -26,7 +26,7 @@ See the Limitations section below the table for more details.
 | *Non-Template Classes*     | Constructors | Accessors | Modifiers  | Transforms |
 | TODO                       | ？           | ？        |  ？        | ？         |
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
-| [forward_list]             | ✅           | 🌗⚙️      | 🌗⚙️？[^1] | ✅         |
+| [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -36,7 +36,8 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 
-[^1]: Mostly caused by the differences between Rust and C++ iterators, could be overcome with type wrappers.
+[^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
+[^2]: `insert_after` and `splice_after` still need to be analysed.
 
 ## Limitations
 
