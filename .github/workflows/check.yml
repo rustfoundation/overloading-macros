@@ -252,6 +252,7 @@ jobs:
         with:
           dry: true
           prettier_options: "--check **/*.md"
+          prettier_version: "3.9.6" # The version available on macOS homebrew
 
   all:
     name: All checks
