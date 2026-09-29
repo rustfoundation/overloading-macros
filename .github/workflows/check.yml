@@ -230,6 +230,29 @@ jobs:
                 diff --unified=5 "cpp-overload-test/examples/$test_name.stderr" /tmp/"$test_name.stderr"
             done
 
+  markdown-lint:
+    name: 11. Lint Markdown files
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run markdownlint-cli
+        uses: nosborn/github-action-markdown-cli@508d6cefd8f0cc99eab5d2d4685b1d5f470042c1 # v3.5.0
+        with:
+          files: "**.md"
+
+  markdown-style:
+    name: 12. Check Markdown style
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run prettier on Markdown files
+        uses: creyD/prettier_action@8c18391fdc98ed0d884c6345f03975edac71b8f0 # v4.6
+        with:
+          dry: true
+          prettier_options: "--check **/*.md"
+
   all:
     name: All checks
     # Always run this job, even if earlier steps were skipped (or failed):
@@ -247,6 +270,8 @@ jobs:
       - diagnostics-rust
       - cpp-overload-test-ok
       - cpp-overload-test-fail
+      - markdown-lint
+      - markdown-style
     steps:
       - name: Fail if any other job failed
         # Every job status needs to be checked here, because `always()` stops failures from propagating automatically
@@ -262,3 +287,5 @@ jobs:
           [[ "${{ needs.diagnostics-rust.result }}" == "success" ]] || exit 1
           [[ "${{ needs.cpp-overload-test-ok.result }}" == "success" ]] || exit 1
           [[ "${{ needs.cpp-overload-test-fail.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.markdown-lint.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.markdown-style.result }}" == "success" ]] || exit 1
