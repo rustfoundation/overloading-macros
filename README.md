@@ -1,17 +1,27 @@
 # Rust Function Overloading Macros
 
-This repository is a [Rust Foundation *experiment*](https://rustfoundation.org/media/experimenting-with-function-overloading-in-rust-why-it-matters/) in ergonomic function overloading in Rust.
+This repository is a [Rust Foundation *experiment*][experiment-blog] in ergonomic function
+overloading in Rust.
 
-The experiment uses macros to improve the ergonomics of the [`splat` Rust language experiment](https://github.com/rust-lang/rust/issues/153629).
-Technical details for the current stage of the experiment can be found [on the Inside Rust blog](https://blog.rust-lang.org/inside-rust/2026/08/19/overloading-experiment/).
+The experiment uses macros to improve the ergonomics of the
+[`splat` Rust language experiment][splat-tracking]. Technical details for the current stage of the
+experiment can be found [on the Inside Rust blog][technical-blog].
 
 Most of this code requires a recent nightly Rust compiler.
 
+[experiment-blog]: https://rustfoundation.org/media/experimenting-with-function-overloading-in-rust-why-it-matters/
+[splat-tracking]: https://github.com/rust-lang/rust/issues/153629
+[technical-blog]: https://blog.rust-lang.org/inside-rust/2026/08/19/overloading-experiment/
+
 ## Experimental Outcomes
 
-Some outcomes of this experiment are summarised in the [C++ overloads in Rust](https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overloads-in-rust.md) document & compatibility table.
+Some outcomes of this experiment are summarised in the [C++ overloads in Rust][cpp-overloads-rust]
+document & compatibility table.
 
-These outcomes are based on the current state of the experimental compiler feature and overloading macro: they are not Rust language design decisions.
+These outcomes are based on the current state of the experimental compiler feature and overloading
+macro: they are not Rust language design decisions.
+
+[cpp-overloads-rust]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overloads-in-rust.md
 
 ## Macro Setup
 
@@ -22,7 +32,8 @@ Add this `overloading-macros` crate as a dependency.
 rustup update nightly
 cd your-project-name
 rustup override set nightly
-cargo add overloading-macros ||  cargo add --git https://github.com/rustfoundation/overloading-macros overloading-macros
+cargo add overloading-macros || \
+    cargo add --git https://github.com/rustfoundation/overloading-macros overloading-macros
 ```
 
 Then use the macro to add overloading to your functions or methods.
