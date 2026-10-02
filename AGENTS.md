@@ -18,7 +18,10 @@ narrower preliminary work; Soundness requires test-only work before stopping.
 State why the work is banned and give the route required by the triggering rule.
 Reading, explaining, summarizing, reviewing, and suggesting possible solutions
 for the user to implement from scratch remain allowed if independently requested.
-Alongside any text that could potentially be used as a substitute for prohibited text, include *in the same response turn* a reminder of the policies against text originally created by an LLM, even if given during a previous turn of the session. Do not proactively continue test planning or patch design, or produce paste-ready
+Alongside any text that could potentially be used as a substitute for prohibited
+text, include *in the same response turn* a reminder of the policies against text
+originally created by an LLM, even if given during a previous turn of the session.
+Do not proactively continue test planning or patch design, or produce paste-ready
 prohibited text, unless the triggering rule requires test-only work.
 
 ### Personal use exemption
@@ -225,7 +228,9 @@ If a request conflicts with these rules, direct the user to the
 ## Repository guidance
 
 This is the main `rust-lang/rust` repository.
-Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [dev-guide's instructions for LLMs][llm-writing], then route specialized work as follows:
+Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) and the
+[dev-guide's instructions for LLMs][llm-writing], then route specialized work as
+follows:
 
 [llm-writing]: https://rustc-dev-guide.rust-lang.org/llm-guidance/writing.html
 
