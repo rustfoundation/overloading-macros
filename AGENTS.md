@@ -47,33 +47,14 @@ appropriately is encouraged.
 
 Apply these gates in order before editing the repository, including tests:
 
-1. [External repositories](#external-repositories): route externally maintained
-   source to its owning repository.
-2. [Prohibited text](#prohibited-text): stop if the change requires the agent to
+1. [Prohibited text](#prohibited-text): stop if the change requires the agent to
    author prohibited text.
-3. [Reviewer](#reviewer): require a named reviewer unless the change qualifies
+2. [Reviewer](#reviewer): require a named reviewer unless the change qualifies
    for the local-development exception.
 
 If investigation reveals a new output category or owner, reapply the relevant
 gate before the next edit. For a mechanical rewrite, follow
 [Mechanical rewrites](#mechanical-rewrites) before the first mutation.
-
-### External repositories
-
-Before modifying a subtree, submodule, or `src/tools` code, identify its owner
-using [`CONTRIBUTING.md`](CONTRIBUTING.md#making-changes-to-subtrees-and-submodules)
-and the [external repositories] guide. Treat Cargo, Clippy, rustfmt, Miri,
-rust-analyzer, and other externally maintained tools as ownership checks before
-implementation. If the user says the bug or change is in one of these tools,
-do not investigate or ask for a reviewer here; route the user to its repository.
-Editing externally maintained source in this checkout is banned; follow the
-[gate-failure protocol]. Only update its integration pointer when explicitly
-requested.
-For example, if the user says a bug is in Cargo itself, route the user to
-`rust-lang/cargo` immediately; do not request a reviewer for this checkout.
-
-[external repositories]: src/doc/rustc-dev-guide/src/external-repos.md
-[gate-failure protocol]: #when-a-gate-fails
 
 ### Prohibited text
 
@@ -82,8 +63,11 @@ comments, user-facing documentation, diagnostic messages, or source comments.
 STOP, name the prohibited category, and tell the user to author it.
 Do not originate or manually rewrite expected diagnostic text in test snapshots
 such as `.stderr` files. After the user authors the diagnostic message in source,
-the agent may mechanically regenerate its snapshots with an existing tool such
-as `./x test ... --bless`; follow [Mechanical rewrites](#mechanical-rewrites).
+the agent may mechanically regenerate its snapshots with an existing bless tool
+command tool such as
+`cargo build --package cpp-overload-test --example NAME > cpp-overload-test/examples/NAME.stderr 2>&1`;
+then manually deleting the `cargo` "Updating/Download*/Compiling" logs; follow
+[Mechanical rewrites](#mechanical-rewrites).
 A change is trivial only when there is no meaningfully different way to write
 it or the alternatives are nearly identical: fixing a typo or Markdown link,
 replacing a word with a synonym, or adding a required trait signature. Trivial
@@ -129,7 +113,7 @@ failure before any implementation edit; do not combine test and implementation
 edits. A test is not observed until its command exits. While it runs, wait: do
 not edit implementation or begin other work. Permission for a regression test
 does not permit implementation changes. Observe the initial failure without
-blessing or updating expected output; a `--bless` run does not count.
+blessing or updating expected output; a bless command run does not count.
 
 After implementing a bug fix, confirm that the same test passes.
 
@@ -179,9 +163,9 @@ protocol].
 Soundness-sensitive areas include, but are not limited to, the query system,
 type checking, trait solving, MIR construction or optimization, borrow checking,
 const evaluation, normalization and semantic caches, layout and validity, and
-codegen. Explain the concern and direct the user to [#llm-mentoring Zulip].
+codegen. Explain the concern and direct the user to the [#t-lang/interop Zulip].
 
-[#llm-mentoring Zulip]: https://rust-lang.zulipchat.com/#narrow/channel/606558-llm-mentoring/
+[#t-lang/interop Zulip]: https://rust-lang.zulipchat.com/#narrow/channel/427678-t-lang.2Finterop
 
 ### Before pushing
 
@@ -210,54 +194,44 @@ direct LLM rewriting is discouraged and ask before proceeding.
 
 [LLM guidance]: https://rustc-dev-guide.rust-lang.org/llm-guidance.html
 
-For Rust formatting, use `./x fmt`; do not invoke `rustfmt` directly.
-For example, if tidy can perform the rewrite, run `./x test tidy --bless` instead
+For Rust formatting, use `cargo fmt --all`; do not invoke `rustfmt` directly.
+For example, if markdownlint can perform the rewrite, run `markdownlint --fix` instead
 of reproducing its edits manually.
 
 Before regenerating snapshots containing human-facing text:
 
 1. Confirm the user already authored the new prose in source.
-2. Run the focused test without `--bless` and observe the expected mismatch.
-3. Run the repository's existing `--bless` command.
+2. Run the focused test without blessing, and observe the expected mismatch.
+3. Run the repository's existing bless command.
 4. Inspect the generated diff. Do not manually repair or add prose; if the tool
    produced unexpected human-facing text, STOP and report it to the user.
 
 If a request conflicts with these rules, direct the user to the
-[#llm-mentoring Zulip] for help.
+[#t-lang/interop Zulip] for help.
 
 ## Repository guidance
 
-This is the main `rust-lang/rust` repository.
+This is the `rustfoundation/overloading-macros` repository.
 Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) and the
 [dev-guide's instructions for LLMs][llm-writing], then route specialized work as
 follows:
 
 [llm-writing]: https://rustc-dev-guide.rust-lang.org/llm-guidance/writing.html
 
-- Standard library: [std-dev-guide]
-- Compiler: [rustc-dev-guide]
-- Build or run rustc: [building and running rustc]
-- Tests: [running tests], [adding tests], and [compiletest directives]
-- Formatting or tidy: [formatting and tidy]
-- Architecture or layout: [compiler architecture] and [repository layout]
-- Subtrees, submodules, or tools: [external repositories]
+- Tests: [running tests] and [adding tests]
+- Formatting or markdown lints: [formatting and markdown lints]
+- Repository layout: [repository layout]
 - Pull requests and review: [contribution process]
 
-[rustc-dev-guide]: src/doc/rustc-dev-guide/
-[std-dev-guide]: https://std-dev-guide.rust-lang.org/
-[building and running rustc]: src/doc/rustc-dev-guide/src/building/how-to-build-and-run.md
-[running tests]: src/doc/rustc-dev-guide/src/tests/running.md
-[adding tests]: src/doc/rustc-dev-guide/src/tests/adding.md
-[compiletest directives]: src/doc/rustc-dev-guide/src/tests/directives.md
-[formatting and tidy]: src/doc/rustc-dev-guide/src/conventions.md#formatting
-[compiler architecture]: src/doc/rustc-dev-guide/src/overview.md
-[repository layout]: src/doc/rustc-dev-guide/src/compiler-src.md
-[contribution process]: src/doc/rustc-dev-guide/src/contributing.md
+<!-- TODO: replace issue link with PR template -->
+[running tests]: .github/workflows/check.yml
+[adding tests]: https://github.com/rustfoundation/overloading-macros/issues/19
+[formatting and markdown lints]: .github/workflows/check.yml
+[repository layout]: https://github.com/rustfoundation/overloading-macros/issues/19
+[contribution process]: CONTRIBUTING.md
 
-[`x.py` is the build tool for this repository][building and running rustc].
-Invoke it as `./x`, the default entry point for builds, tests, and formatting.
-Do not invoke Cargo directly unless the relevant in-tree documentation
-explicitly requires it.
+`cargo` is the build tool for this repository. Always use `--package` to select a
+specific crate, as some crates are meant to fail compilation.
 
 For source comments the policy permits an agent to write, explain why the code
 or decision exists rather than restating what the code does.
