@@ -13,6 +13,18 @@ Most of this code requires a recent nightly Rust compiler.
 [splat-tracking]: https://github.com/rust-lang/rust/issues/153629
 [technical-blog]: https://blog.rust-lang.org/inside-rust/2026/08/19/overloading-experiment/
 
+## Contributing to this Project
+
+Contributions to this project are welcome, as long as you follow the
+[Code of Conduct][code-of-conduct]. See the developer setup instructions below for details.
+
+AI usage must be disclosed. Do not use AI for GitHub descriptions or comments. Write in your native
+language, or in English. You can use LLMs to answer questions, analyze, check, and review. But not
+to create code. See the full [LLM Policy][llm-policy] for details.
+
+[code-of-conduct]: https://github.com/rustfoundation/overloading-macros/blob/main/CODE_OF_CONDUCT.md
+[llm-policy]: https://github.com/rustfoundation/overloading-macros/blob/main/CONTRIBUTING.md#contribution-process
+
 ## Experimental Outcomes
 
 Some outcomes of this experiment are summarised in the [C++ overloads in Rust][cpp-overloads-rust]
