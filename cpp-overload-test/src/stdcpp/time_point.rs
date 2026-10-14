@@ -38,6 +38,7 @@ pub struct StdSecondsTimePoint(*mut c_void, PhantomData<()>);
 
 impl StdSecondsTimePoint {
     /// Construct a time point from seconds since the epoch.
+    #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
     fn from_seconds(seconds: i64) -> Self {
         let point = unsafe {
             cpp!([seconds as "long long"] -> *mut c_void as
@@ -54,6 +55,7 @@ impl StdSecondsTimePoint {
 
 impl StdTimePoint {
     /// Construct a time point at the clock's epoch.
+    #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
     fn default() -> Self {
         let point = unsafe {
             cpp!([] -> *mut c_void as "TestTimePoint*" {
@@ -65,6 +67,7 @@ impl StdTimePoint {
     }
 
     /// Construct a time point from milliseconds since the epoch.
+    #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
     fn from_duration(milliseconds: i64) -> Self {
         let point = unsafe {
             cpp!([milliseconds as "long long"] -> *mut c_void as
@@ -79,6 +82,7 @@ impl StdTimePoint {
     }
 
     /// Construct a millisecond time point from second time point.
+    #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
     fn from_other(other: &StdSecondsTimePoint) -> Self {
         let other = other.0 as *const c_void;
 
@@ -94,6 +98,7 @@ impl StdTimePoint {
     }
 
     /// Return the number of milliseconds since epoch.
+    #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
     fn milliseconds_since_epoch(&self) -> i64 {
         let point = self.0 as *const c_void;
 
