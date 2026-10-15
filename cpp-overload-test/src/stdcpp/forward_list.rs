@@ -696,7 +696,7 @@ pub fn test_forward_list() {
     // FIXME: maybe add a const generic overload for arrays.
     let mut from_slice = StdForwardList::new([1, 2, 3].as_slice());
     assert_eq!(from_slice.front_const(), Some(&1));
-    let from_empty_slice = StdForwardList::new(&[]);
+    let from_empty_slice = StdForwardList::new([].as_slice());
     assert!(from_empty_slice.is_empty());
 
     // ### Limitations
@@ -766,7 +766,7 @@ pub fn test_forward_list() {
     );
     assert_eq!(from_cpp_iter.front_const(), Some(&5));
 
-    let from_empty_cpp_iter_list = StdForwardList::new(&[]);
+    let from_empty_cpp_iter_list = StdForwardList::new([].as_slice());
     let workaround_static_ref = static_ref(from_empty_cpp_iter_list);
     let from_empty_cpp_iter = StdForwardList::new(
         &StdForwardList::begin(workaround_static_ref),
