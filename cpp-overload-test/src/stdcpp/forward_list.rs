@@ -707,7 +707,8 @@ pub fn test_forward_list() {
     let mut iter: std::array::IntoIter<T, 3> = [1, 2, 3].into_iter();
     let from_iter = StdForwardList::new(&mut iter as &mut dyn Iterator<Item = _>);
     assert_eq!(from_iter.front_const(), Some(&1));
-    let from_empty_iter = StdForwardList::new(&[].into_iter() as &mut dyn Iterator<Item = _>);
+    mut empty_iter: std::array::IntoIter<T, 0> = [].into_iter();
+    let from_empty_iter = StdForwardList::new(&mut empty_iter as &mut dyn Iterator<Item = _>);
     assert!(from_empty_iter.is_empty());
 
     let ref_clone = StdForwardList::new(&default_list);
