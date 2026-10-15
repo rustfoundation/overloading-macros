@@ -152,8 +152,14 @@ impl StdForwardList {
     /// The slice satisfies C++ `ContiguousIterator`, even though it's not a requirement for this
     /// C++ iterator overload.
     fn from_slice(items: &[T]) -> StdForwardList {
+        // An empty Rust slice is guaranteed to have a dangling pointer, see
+        // <https://doc.rust-lang.org/std/slice/fn.from_raw_parts.html#safety>
+        if items.is_empty() {
+            return StdForwardList::default();
+        }
         let len = items.len();
         let items: *const T = items.as_ptr();
+        // SAFETY: items is a non-null pointer to len properly initialized values of T
         let list = unsafe {
             cpp!([items as "const int*", len as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
                 // In C++, `items + len` increments the pointer by `len` elements of `sizeof(int)`.
@@ -170,6 +176,8 @@ impl StdForwardList {
     ) -> StdForwardList {
         let first = first.0 as *const c_void;
         let last = last.0 as *const c_void;
+        // SAFETY: Unlike Rust, an empty C++ iterator requires no special handling.
+        // But end iterators can never be dereferenced, regardless of where they're from (and this C++ code doesn't do that).
         let list = unsafe {
             cpp!([first as "std::forward_list<int>::const_iterator", last as "std::forward_list<int>::const_iterator"] -> *mut c_void as "std::forward_list<int>*" {
                 return new std::forward_list<int>(first, last);
@@ -192,8 +200,14 @@ impl StdForwardList {
     /// This could be done using C++ iterators, see `from_cpp_iter` above.
     fn from_iter(iter: &mut dyn Iterator<Item = T>) -> StdForwardList {
         let items: Vec<T> = iter.collect();
+        // An empty Rust Vec is guaranteed to have a dangling pointer, see
+        // <https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_ptr>
+        if items.is_empty() {
+            return StdForwardList::default();
+        }
         let len = items.len();
         let items: *const T = items.as_ptr();
+        // SAFETY: items is a non-null pointer to len properly initialized values of T
         let list = unsafe {
             cpp!([items as "const int*", len as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
                 // Use the legacy iterator constructor for `vector`.
@@ -682,6 +696,8 @@ pub fn test_forward_list() {
     // FIXME: maybe add a const generic overload for arrays.
     let mut from_slice = StdForwardList::new([1, 2, 3].as_slice());
     assert_eq!(from_slice.front_const(), Some(&1));
+    let from_empty_slice = StdForwardList::new(&[]);
+    assert!(from_empty_slice.is_empty());
 
     // ### Limitations
     //
@@ -691,6 +707,8 @@ pub fn test_forward_list() {
     let mut iter: std::array::IntoIter<T, 3> = [1, 2, 3].into_iter();
     let from_iter = StdForwardList::new(&mut iter as &mut dyn Iterator<Item = _>);
     assert_eq!(from_iter.front_const(), Some(&1));
+    let from_empty_iter = StdForwardList::new(&[].into_iter() as &mut dyn Iterator<Item = _>);
+    assert!(from_empty_iter.is_empty());
 
     let ref_clone = StdForwardList::new(&default_list);
     assert!(ref_clone.is_empty());
@@ -747,6 +765,14 @@ pub fn test_forward_list() {
         &StdForwardList::end(workaround_static_ref),
     );
     assert_eq!(from_cpp_iter.front_const(), Some(&5));
+
+    let from_empty_cpp_iter_list = StdForwardList::new(&[]);
+    let workaround_static_ref = static_ref(from_empty_cpp_iter_list);
+    let from_empty_cpp_iter = StdForwardList::new(
+        &StdForwardList::begin(workaround_static_ref),
+        &StdForwardList::end(workaround_static_ref),
+    );
+    assert!(from_empty_cpp_iter.is_empty());
 
     // Modifiers: `merge(...)`
     let mut merge_into_list = StdForwardList::new([1, 3, 5].as_slice());
