@@ -7,5 +7,6 @@
 /// The C++ standard library.
 pub mod stdcpp {
     // Add new modules for each type here, in alphabetical order.
+    pub mod array;
     pub mod forward_list;
 }
