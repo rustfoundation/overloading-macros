@@ -1,0 +1,20 @@
+error[E0425]: cannot find type `I` in this scope
+  --> cpp-overload-test/examples/stdcpp-priority-queue.rs:30:51
+   |
+30 |         fn new<I: Iterator<Item = c_int>>(_first: I, _last: I) -> StdPriorityQueueIter {
+   |                                                   ^ not found in this scope
+
+error[E0425]: cannot find type `I` in this scope
+  --> cpp-overload-test/examples/stdcpp-priority-queue.rs:30:61
+   |
+30 |         fn new<I: Iterator<Item = c_int>>(_first: I, _last: I) -> StdPriorityQueueIter {
+   |                                                             ^ not found in this scope
+
+error[E0425]: cannot find type `A` in this scope
+  --> cpp-overload-test/examples/stdcpp-priority-queue.rs:45:51
+   |
+45 |         fn emplace<A: Into<c_int>>(&mut self, _a: A) {
+   |                                                   ^ not found in this scope
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `cpp-overload-test` (example "stdcpp-priority-queue") due to 3 previous errors
