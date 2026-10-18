@@ -21,25 +21,76 @@ cpp! {{
 
     using TestClock = std::chrono::system_clock;
     using TestDuration = std::chrono::milliseconds;
+    using TestSecondsDuration = std::chrono::seconds;
+
     using TestTimePoint =
         std::chrono::time_point<TestClock, TestDuration>;
 
     using TestSecondsTimePoint =
-        std::chrono::time_point<TestClock, std::chrono::seconds>;
+        std::chrono::time_point<TestClock, TestSecondsDuration>;
 }}
 
 /// A wrapper around a C++ time point with millisecond precision.
 #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
-pub struct StdTimePoint(*mut c_void, PhantomData<()>);
+pub struct StdMillisecondsTimePoint(*mut c_void, PhantomData<()>);
 
 /// A Wrapper around a C++ time point with second precision.
 #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
 pub struct StdSecondsTimePoint(*mut c_void, PhantomData<()>);
 
+/// A wrapper around a c++ duration with millisecond precision
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
+pub struct StdMillisecondsDuration(*mut c_void, PhantomData<()>);
+
+/// A wrapper arond a c++ duration with second precision.
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
+pub struct StdSecondsDuration(*mut c_void, PhantomData<()>);
+
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
+impl StdMillisecondsDuration {
+    /// Construct a millisecond duration from its tick count.
+    fn from_count(milliseconds: c_longlong) -> Self {
+        let duration = unsafe {
+            cpp!([milliseconds as "long long"] -> *mut c_void as
+                "TestDuration*" {
+                return new TestDuration(milliseconds);
+            })
+        };
+        Self(duration, PhantomData)
+    }
+
+    /// Return the number of milliseconds in the duration.
+    fn count(&self) -> c_longlong {
+        let duration = self.0 as *const c_void;
+
+        unsafe {
+            cpp!([duration as "const TestDuration*"] -> c_longlong as
+                "long long" {
+                    return duration->count();
+            })
+        }
+    }
+}
+
+#[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
+impl StdSecondsDuration {
+    /// Rerturn the number of seconds in the duration.
+    fn count(&self) -> c_longlong {
+        let duration = self.0 as *const c_void;
+
+        unsafe {
+            cpp!([duration as "const TestSecondsDuration*"] -> c_longlong as
+                "long long" {
+                return duration->count();
+            })
+        }
+    }
+}
+
 #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
 impl StdSecondsTimePoint {
     /// Construct a time point from seconds since the epoch.
-    fn from_seconds(seconds: i64) -> Self {
+    fn from_seconds(seconds: c_longlong) -> Self {
         let point = unsafe {
             cpp!([seconds as "long long"] -> *mut c_void as
             "TestSecondsTimePoint*" {
@@ -51,10 +102,21 @@ impl StdSecondsTimePoint {
 
         Self(point, PhantomData)
     }
+
+    fn seconds_since_epoch(&self) -> c_longlong {
+        let point = self.0 as *const c_void;
+
+        unsafe {
+            cpp!([point as "const TestSecondsTimePoint*"] -> c_longlong as
+                "long long" {
+                return point->time_since_epoch().count();
+            })
+        }
+    }
 }
 
 #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
-impl StdTimePoint {
+impl StdMillisecondsTimePoint {
     /// Construct a time point at the clock's epoch.
     fn default() -> Self {
         let point = unsafe {
@@ -67,7 +129,7 @@ impl StdTimePoint {
     }
 
     /// Construct a time point from milliseconds since the epoch.
-    fn from_duration(milliseconds: i64) -> Self {
+    fn from_duration(milliseconds: c_longlong) -> Self {
         let point = unsafe {
             cpp!([milliseconds as "long long"] -> *mut c_void as
                 "TestTimePoint*" {
@@ -96,7 +158,7 @@ impl StdTimePoint {
     }
 
     /// Return the number of milliseconds since epoch.
-    fn milliseconds_since_epoch(&self) -> i64 {
+    fn milliseconds_since_epoch(&self) -> c_longlong {
         let point = self.0 as *const c_void;
 
         unsafe {
@@ -106,6 +168,129 @@ impl StdTimePoint {
                     })
         }
     }
+    /// Round millisecond duration
+    fn round_duration(duration: &StdMillisecondsDuration) -> StdSecondsDuration {
+        let duration = duration.0 as *const c_void;
+
+        let result = unsafe {
+            cpp!([duration as "const TestDuration*"] -> *mut c_void as
+                "TestSecondsDuration*" {
+                return new TestSecondsDuration(
+                    std::chrono::round<TestSecondsDuration>(*duration)
+                );
+            })
+        };
+
+        StdSecondsDuration(result, PhantomData)
+    }
+
+    /// Round millisecond timepoint
+    fn round_point(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
+        let point = point.0 as *const c_void;
+
+        let result = unsafe {
+            cpp!([point as "const TestTimePoint*"] -> *mut c_void as
+            "TestSecondsTimePoint*" {
+            return new TestSecondsTimePoint(
+                std::chrono::round<TestSecondsDuration>(*point)
+                );
+            })
+        };
+
+        StdSecondsTimePoint(result, PhantomData)
+    }
+
+    /// Round millisecond duration down to whole seconds.
+    fn floor_duration(duration: &StdMillisecondsDuration) -> StdSecondsDuration {
+        let duration = duration.0 as *const c_void;
+
+        let result = unsafe {
+            cpp!([duration as "const TestDuration*"] -> *mut c_void as
+                "TestSecondsDuration*" {
+                return new TestSecondsDuration(
+                    std::chrono::floor<TestSecondsDuration>(*duration)
+                );
+            })
+        };
+
+        StdSecondsDuration(result, PhantomData)
+    }
+
+    /// Round milisecond time point down to whole seconds.
+    fn floor_point(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
+        let point = point.0 as *const c_void;
+
+        let result = unsafe {
+            cpp!([point as "const TestTimePoint*"] -> *mut c_void as
+                "TestSecondsTimePoint*" {
+                return new TestSecondsTimePoint(
+                    std::chrono::floor<TestSecondsDuration>(*point)
+                );
+            })
+        };
+
+        StdSecondsTimePoint(result, PhantomData)
+    }
+
+    /// Round millisecond duration up to whole seonds.
+    fn ceil_duration(duration: &StdMillisecondsDuration) -> StdSecondsDuration {
+        let duration = duration.0 as *const c_void;
+
+        let result = unsafe {
+            cpp!([duration as "const TestDuration*"] -> *mut c_void as
+                "TestSecondsDuration*" {
+                return new TestSecondsDuration(
+                    std::chrono::ceil<TestSecondsDuration>(*duration)
+                );
+            })
+        };
+        StdSecondsDuration(result, PhantomData)
+    }
+
+    /// Round a millisecond time point up to whole seconsd.
+    fn ceil_point(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
+        let point = point.0 as *const c_void;
+
+        let result = unsafe {
+            cpp!([point as "const TestTimePoint*"] -> *mut c_void as
+                "TestSecondsTimePoint*" {
+                return new TestSecondsTimePoint(
+                    std::chrono::ceil<TestSecondsDuration>(*point)
+                );
+            })
+        };
+
+        StdSecondsTimePoint(result, PhantomData)
+    }
+
+    /// Convert seconds to milliseconds.
+    fn cast_seconds_to_milliseconds(point: &StdSecondsTimePoint) -> StdMillisecondsTimePoint {
+        let point = point.0 as *const c_void;
+        let result = unsafe {
+            cpp!([point as "const TestSecondsTimePoint*"] -> *mut c_void as
+                "TestTimePoint*" {
+                return new TestTimePoint(
+                    std::chrono::time_point_cast<TestDuration>(*point)
+                );
+            })
+        };
+        StdMillisecondsTimePoint(result, PhantomData)
+    }
+
+    /// Convert milliseconds to seconds
+    fn cast_milliseconds_to_seconds(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
+        let point = point.0 as *const c_void;
+        let result = unsafe {
+            cpp!([point as "const TestTimePoint*"] -> *mut c_void as
+                "TestSecondsTimePoint*" {
+                return new TestSecondsTimePoint(
+                    std::chrono::time_point_cast<TestSecondsDuration>(*point)
+                );
+            })
+        };
+
+        StdSecondsTimePoint(result, PhantomData)
+    }
 }
 
 // ### Ergonomics
@@ -114,20 +299,79 @@ impl StdTimePoint {
 // Rust does not normallly support constructor overloading.
 // The overload! macro allows these constructors to share the name new.
 overload! {
-    impl StdTimePoint {
+    impl StdMillisecondsTimePoint {
     /// Construct time point at clock's epoch.
-    pub fn new() -> StdTimePoint {
-        StdTimePoint::default()
+    pub fn new() -> StdMillisecondsTimePoint {
+        StdMillisecondsTimePoint::default()
     }
 
     /// Construct time point from milliseconds since the epoch.
-    pub fn new(milliseconds: i64) -> StdTimePoint {
-        StdTimePoint::from_duration(milliseconds)
+    pub fn new(milliseconds: &StdMillisecondsDuration) -> StdMillisecondsTimePoint {
+        StdMillisecondsTimePoint::from_duration(milliseconds.count())
     }
 
     /// Construct time point from seconds-resolution time point.
-    pub fn new(other: &StdSecondsTimePoint) -> StdTimePoint {
-        StdTimePoint::from_other(other)
+    pub fn new(other: &StdSecondsTimePoint) -> StdMillisecondsTimePoint {
+        StdMillisecondsTimePoint::from_other(other)
+        }
+    }
+}
+
+// overloading the  round
+
+overload! {
+    impl StdMillisecondsTimePoint {
+
+    pub fn round(duration: &StdMillisecondsDuration) -> StdSecondsDuration {
+        StdMillisecondsTimePoint::round_duration(duration)
+        }
+
+    pub fn round(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
+        StdMillisecondsTimePoint::round_point(point)
+        }
+
+    }
+}
+
+// overloading the floor
+overload! {
+    impl StdMillisecondsTimePoint {
+
+    pub fn floor(duration: &StdMillisecondsDuration) -> StdSecondsDuration {
+        StdMillisecondsTimePoint::floor_duration(duration)
+        }
+
+    pub fn floor(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
+        StdMillisecondsTimePoint::floor_point(point)
+        }
+    }
+}
+
+// overloading the ceil
+overload! {
+    impl StdMillisecondsTimePoint {
+
+    pub fn ceil(duration: &StdMillisecondsDuration) -> StdSecondsDuration {
+        StdMillisecondsTimePoint::ceil_duration(duration)
+        }
+
+    pub fn ceil(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
+        StdMillisecondsTimePoint::ceil_point(point)
+        }
+    }
+}
+
+// overloading the time_point_cast
+
+overload! {
+    impl StdMillisecondsTimePoint {
+
+    pub fn time_point_cast(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
+        StdMillisecondsTimePoint::cast_milliseconds_to_seconds(point)
+        }
+
+    pub fn time_point_cast(point: &StdSecondsTimePoint) -> StdMillisecondsTimePoint {
+        StdMillisecondsTimePoint::cast_seconds_to_milliseconds(point)
         }
     }
 }
@@ -135,15 +379,85 @@ overload! {
 #[test]
 fn test_time_point_constructors() {
     // Test the default constructor.
-    let epoch = StdTimePoint::new();
+    let epoch = StdMillisecondsTimePoint::new();
     assert_eq!(epoch.milliseconds_since_epoch(), 0);
 
     // Test the duration constructor.
-    let milliseconds = StdTimePoint::new(1500_i64);
+    let duration = StdMillisecondsDuration::from_count(1500);
+    let milliseconds = StdMillisecondsTimePoint::new(&duration);
     assert_eq!(milliseconds.milliseconds_since_epoch(), 1500);
 
     // Test the converting constructor.
     let seconds = StdSecondsTimePoint::from_seconds(2);
-    let converted = StdTimePoint::new(&seconds);
+    let converted = StdMillisecondsTimePoint::new(&seconds);
     assert_eq!(converted.milliseconds_since_epoch(), 2000);
+}
+
+#[test]
+fn test_round_overloads() {
+    //Duration overload
+    let duration = StdMillisecondsDuration::from_count(1500);
+    let rounded_duration = StdMillisecondsTimePoint::round(&duration);
+    assert_eq!(rounded_duration.count(), 2);
+
+    // Time point overload.
+    let point = StdMillisecondsTimePoint::new(&duration);
+    let rounded_point = StdMillisecondsTimePoint::round(&point);
+    assert_eq!(rounded_point.seconds_since_epoch(), 2);
+
+    // nearest value
+    let duration = StdMillisecondsDuration::from_count(2500);
+    let rounded_duration = StdMillisecondsTimePoint::round(&duration);
+    assert_eq!(rounded_duration.count(), 2);
+}
+
+#[test]
+fn test_floor_overloads() {
+    // Duration overload
+    let duration = StdMillisecondsDuration::from_count(1500);
+    let floored_duration = StdMillisecondsTimePoint::floor(&duration);
+    assert_eq!(floored_duration.count(), 1);
+
+    // Time point overload
+    let point = StdMillisecondsTimePoint::new(&duration);
+    let floored_point = StdMillisecondsTimePoint::floor(&point);
+    assert_eq!(floored_point.seconds_since_epoch(), 1);
+
+    // floor negative values
+    let duration = StdMillisecondsDuration::from_count(-1500);
+    let floored_duration = StdMillisecondsTimePoint::floor(&duration);
+    assert_eq!(floored_duration.count(), -2);
+}
+
+#[test]
+fn test_ceil_overloads() {
+    // Duration overload.
+    let duration = StdMillisecondsDuration::from_count(1500);
+    let ceiled_duration = StdMillisecondsTimePoint::ceil(&duration);
+    assert_eq!(ceiled_duration.count(), 2);
+
+    // Time poitn overload.
+    let point = StdMillisecondsTimePoint::new(&duration);
+    let ceiled_point = StdMillisecondsTimePoint::ceil(&point);
+    assert_eq!(ceiled_point.seconds_since_epoch(), 2);
+
+    // Ceil the values
+    let duration = StdMillisecondsDuration::from_count(-1500);
+    let ceiled_duration = StdMillisecondsTimePoint::ceil(&duration);
+    assert_eq!(ceiled_duration.count(), -1);
+}
+
+#[test]
+fn test_time_point_cast_overloads() {
+    // Milliseconds to seconds.
+    let duration = StdMillisecondsDuration::from_count(5756);
+    let milliseconds = StdMillisecondsTimePoint::new(&duration);
+
+    let seconds = StdMillisecondsTimePoint::time_point_cast(&milliseconds);
+    assert_eq!(seconds.seconds_since_epoch(), 5);
+
+    //seconds to milliseconds
+    let seconds = StdSecondsTimePoint::from_seconds(4);
+    let milliseconds = StdMillisecondsTimePoint::time_point_cast(&seconds);
+    assert_eq!(milliseconds.milliseconds_since_epoch(), 4000);
 }
