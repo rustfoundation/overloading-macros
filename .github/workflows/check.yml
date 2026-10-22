@@ -185,6 +185,8 @@ jobs:
             cargo test --all-features --package cpp-overload-test --lib
             cargo test --doc --all-features --package cpp-overload-test
             cargo fmt --package cpp-overload-test -- --check
+      - name: Check changed cpp! code is rebuilt
+        run: bash cpp-overload-test/rerun-check.sh
 
   cpp-overload-test-fail:
     name: 10. Must-fail C++ overloads
