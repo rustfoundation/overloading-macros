@@ -29,11 +29,11 @@ cpp! {{
     #include <chrono>
 
     using TestClock = std::chrono::system_clock;
-    using TestDuration = std::chrono::milliseconds;
+    using TestMillisecondsDuration = std::chrono::milliseconds;
     using TestSecondsDuration = std::chrono::seconds;
 
-    using TestTimePoint =
-        std::chrono::time_point<TestClock, TestDuration>;
+    using TestMillisecondsTimePoint =
+        std::chrono::time_point<TestClock, TestMillisecondsDuration>;
 
     using TestSecondsTimePoint =
         std::chrono::time_point<TestClock, TestSecondsDuration>;
@@ -61,8 +61,8 @@ impl StdMillisecondsDuration {
     fn from_count(milliseconds: c_longlong) -> Self {
         let duration = unsafe {
             cpp!([milliseconds as "long long"] -> *mut c_void as
-                "TestDuration*" {
-                return new TestDuration(milliseconds);
+                "TestMillisecondsDuration*" {
+                return new TestMillisecondsDuration(milliseconds);
             })
         };
         Self(duration, PhantomData)
@@ -73,7 +73,7 @@ impl StdMillisecondsDuration {
         let duration = self.0 as *const c_void;
 
         unsafe {
-            cpp!([duration as "const TestDuration*"] -> c_longlong as
+            cpp!([duration as "const TestMillisecondsDuration*"] -> c_longlong as
                 "long long" {
                     return duration->count();
             })
@@ -130,8 +130,8 @@ impl StdMillisecondsTimePoint {
     /// Construct a time point at the clock's epoch.
     fn default() -> Self {
         let point = unsafe {
-            cpp!([] -> *mut c_void as "TestTimePoint*" {
-                return new TestTimePoint();
+            cpp!([] -> *mut c_void as "TestMillisecondsTimePoint*" {
+                return new TestMillisecondsTimePoint();
             })
         };
 
@@ -142,9 +142,9 @@ impl StdMillisecondsTimePoint {
     fn from_duration(milliseconds: c_longlong) -> Self {
         let point = unsafe {
             cpp!([milliseconds as "long long"] -> *mut c_void as
-                "TestTimePoint*" {
-                return new TestTimePoint(
-                    TestDuration(milliseconds)
+                "TestMillisecondsTimePoint*" {
+                return new TestMillisecondsTimePoint(
+                    TestMillisecondsDuration(milliseconds)
                 );
             })
         };
@@ -158,8 +158,8 @@ impl StdMillisecondsTimePoint {
 
         let point = unsafe {
             cpp!([other as "const TestSecondsTimePoint*"] -> *mut
-                c_void as "TestTimePoint*" {
-                return new TestTimePoint(*other);
+                c_void as "TestMillisecondsTimePoint*" {
+                return new TestMillisecondsTimePoint(*other);
 
             })
         };
@@ -172,7 +172,7 @@ impl StdMillisecondsTimePoint {
         let point = self.0 as *const c_void;
 
         unsafe {
-            cpp!([point as "const TestTimePoint*"] -> c_longlong as
+            cpp!([point as "const TestMillisecondsTimePoint*"] -> c_longlong as
             "long long" {
                     return point->time_since_epoch().count();
                     })
@@ -183,7 +183,7 @@ impl StdMillisecondsTimePoint {
         let duration = duration.0 as *const c_void;
 
         let result = unsafe {
-            cpp!([duration as "const TestDuration*"] -> *mut c_void as
+            cpp!([duration as "const TestMillisecondsDuration*"] -> *mut c_void as
                 "TestSecondsDuration*" {
                 return new TestSecondsDuration(
                     std::chrono::round<TestSecondsDuration>(*duration)
@@ -199,7 +199,7 @@ impl StdMillisecondsTimePoint {
         let point = point.0 as *const c_void;
 
         let result = unsafe {
-            cpp!([point as "const TestTimePoint*"] -> *mut c_void as
+            cpp!([point as "const TestMillisecondsTimePoint*"] -> *mut c_void as
             "TestSecondsTimePoint*" {
             return new TestSecondsTimePoint(
                 std::chrono::round<TestSecondsDuration>(*point)
@@ -215,7 +215,7 @@ impl StdMillisecondsTimePoint {
         let duration = duration.0 as *const c_void;
 
         let result = unsafe {
-            cpp!([duration as "const TestDuration*"] -> *mut c_void as
+            cpp!([duration as "const TestMillisecondsDuration*"] -> *mut c_void as
                 "TestSecondsDuration*" {
                 return new TestSecondsDuration(
                     std::chrono::floor<TestSecondsDuration>(*duration)
@@ -231,7 +231,7 @@ impl StdMillisecondsTimePoint {
         let point = point.0 as *const c_void;
 
         let result = unsafe {
-            cpp!([point as "const TestTimePoint*"] -> *mut c_void as
+            cpp!([point as "const TestMillisecondsTimePoint*"] -> *mut c_void as
                 "TestSecondsTimePoint*" {
                 return new TestSecondsTimePoint(
                     std::chrono::floor<TestSecondsDuration>(*point)
@@ -247,7 +247,7 @@ impl StdMillisecondsTimePoint {
         let duration = duration.0 as *const c_void;
 
         let result = unsafe {
-            cpp!([duration as "const TestDuration*"] -> *mut c_void as
+            cpp!([duration as "const TestMillisecondsDuration*"] -> *mut c_void as
                 "TestSecondsDuration*" {
                 return new TestSecondsDuration(
                     std::chrono::ceil<TestSecondsDuration>(*duration)
@@ -262,7 +262,7 @@ impl StdMillisecondsTimePoint {
         let point = point.0 as *const c_void;
 
         let result = unsafe {
-            cpp!([point as "const TestTimePoint*"] -> *mut c_void as
+            cpp!([point as "const TestMillisecondsTimePoint*"] -> *mut c_void as
                 "TestSecondsTimePoint*" {
                 return new TestSecondsTimePoint(
                     std::chrono::ceil<TestSecondsDuration>(*point)
@@ -278,9 +278,9 @@ impl StdMillisecondsTimePoint {
         let point = point.0 as *const c_void;
         let result = unsafe {
             cpp!([point as "const TestSecondsTimePoint*"] -> *mut c_void as
-                "TestTimePoint*" {
-                return new TestTimePoint(
-                    std::chrono::time_point_cast<TestDuration>(*point)
+                "TestMillisecondsTimePoint*" {
+                return new TestMillisecondsTimePoint(
+                    std::chrono::time_point_cast<TestMillisecondsDuration>(*point)
                 );
             })
         };
@@ -291,7 +291,7 @@ impl StdMillisecondsTimePoint {
     fn cast_milliseconds_to_seconds(point: &StdMillisecondsTimePoint) -> StdSecondsTimePoint {
         let point = point.0 as *const c_void;
         let result = unsafe {
-            cpp!([point as "const TestTimePoint*"] -> *mut c_void as
+            cpp!([point as "const TestMillisecondsTimePoint*"] -> *mut c_void as
                 "TestSecondsTimePoint*" {
                 return new TestSecondsTimePoint(
                     std::chrono::time_point_cast<TestSecondsDuration>(*point)
