@@ -13,7 +13,12 @@ fn test_stdcpp_classes() {
         #include <vector>
         auto v = new vector<int>({1, 2, 3});
 
-        //#include <hive>
+        #include <version>
+        #if __cpp_lib_hive >= 202502L
+            #include <hive>
+            auto h = new hive<int>({1, 2, 3});
+            #error "hive is now supported, update the tests"
+        #endif
 
         #include <deque>
         auto d = new deque<int>({1, 2, 3});
@@ -30,6 +35,9 @@ fn test_stdcpp_classes() {
 
         #include <map>
         auto m = new multimap<int, int>({{1, 2}, {3, 4}});
+
+        #include <unordered_map>
+        auto um = new unordered_map<int, int>({{1, 2}, {3, 4}});
 
         #include <unordered_set>
         auto us = new unordered_multiset<int>({1, 2, 3});
