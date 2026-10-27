@@ -27,6 +27,7 @@ See the Limitations section below the table for more details.
 | TODO                       | ？           | ？        |  ？        | ？         |
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
+| [vector]                   | 🌗⛔[^3]     | ⚙️？[^4]  | 🌗？[^5]   | ？[^6]     |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -35,9 +36,32 @@ Modifiers: Add or change the items in a list class, called as `instance->put(...
 Transforms: Rearrange the items in a list class, called as `instance->sort(...)`<br/>
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
+[vector]: cpp-overload-test/src/stdcpp/vector.rs
+[vector-failures]: cpp-overload-test/examples/stdcpp-vector.rs
+[vector-diagnostics]: cpp-overload-test/examples/stdcpp-vector.stderr
 
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.
+
+[^3]:
+    Constructor families work together for `T = c_int`, excluding allocator variants.
+    Initializer-list input is limited to one, two, or three elements; `from_range` uses a
+    buffered Rust iterator and C++ span. With `T = c_size_t`, the translated one- and
+    two-element initializer-list signatures conflict with count and fill constructors.
+    These are Rust translation conflicts, not conflicting C++ signatures; see the
+    [failing example][vector-failures] and [compiler diagnostics][vector-diagnostics].
+
+[^4]:
+    The tested `front(&self)` / `front(&mut self)` pair is rejected by the macro's
+    receiver restriction. Other accessor overloads were not independently tested.
+    Separate method names are a workaround; see [vector failures][vector-failures].
+
+[^5]:
+    Both `resize` overloads and both `erase` overloads pass tests. `erase` adapts C++
+    iterator arguments and results into checked indices. Other modifier overload sets,
+    including `insert`, still need analysis.
+
+[^6]: Vector transforms have not been analysed; this does not assert an absence of overloads.
 
 ## Limitations
 
