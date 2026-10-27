@@ -58,7 +58,7 @@ fn test_stdcpp_classes() {
         // Chrono
         #include <chrono>
         using namespace chrono;
-        auto tp = new time_point<system_clock, microseconds>(system_clock::now());
+        auto tp = new time_point<system_clock>(system_clock::now());
 
         // Container adapters & views
         #include <stack>
