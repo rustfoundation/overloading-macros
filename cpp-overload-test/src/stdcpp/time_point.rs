@@ -1,19 +1,14 @@
 //! C++ overloads tests for [std::chrono::time_point][time_point]
 //!
-//! This file tests three constructors that can be represented in Rust.
+//! This file tests four constructors that can be represented in Rust.
 //!
 //! ### Limitations
 //!
 //! C++ time points use clock and duration types.
 //! This test uses fixed types instead of supporting all possible types.
 //!
-//! The round, floor and ceil methods support only the selected
-//! conversions from milliseconds to seconds. The time_point_cast
-//! method supports only conversions between the two time point types
-//! defind in this test.
-//!
 //! This test focuses on selected overloads rather than reproducing
-//! the complete c++ API. Overloaded oeprators, assignment operations,
+//! the complete c++ API. Overloaded operators, assignment operations,
 //! and other excluded are outside it's scope.
 //!
 //! [time_point]: https://en.cppreference.com/cpp/chrono/time_point
@@ -139,13 +134,14 @@ impl StdMillisecondsTimePoint {
     }
 
     /// Construct a time point from milliseconds since the epoch.
-    fn from_duration(milliseconds: c_longlong) -> Self {
+    fn from_duration(milliseconds: &StdMillisecondsDuration) -> Self {
+        let milliseconds = milliseconds.0 as *const c_void;
+
         let point = unsafe {
-            cpp!([milliseconds as "long long"] -> *mut c_void as
+            cpp!([milliseconds as "const TestMillisecondsDuration*"] -> *mut c_void as
                 "TestMillisecondsTimePoint*" {
-                return new TestMillisecondsTimePoint(
-                    TestMillisecondsDuration(milliseconds)
-                );
+                return new TestMillisecondsTimePoint(*milliseconds);
+
             })
         };
 
@@ -161,6 +157,20 @@ impl StdMillisecondsTimePoint {
                 c_void as "TestMillisecondsTimePoint*" {
                 return new TestMillisecondsTimePoint(*other);
 
+            })
+        };
+
+        Self(point, PhantomData)
+    }
+
+    /// Copy milliseconds time point
+    fn copy_from(other: &StdMillisecondsTimePoint) -> Self {
+        let other = other.0 as *const c_void;
+
+        let point = unsafe {
+            cpp!([other as "const TestMillisecondsTimePoint*"]
+                -> *mut c_void as "TestMillisecondsTimePoint*" {
+                return new TestMillisecondsTimePoint(*other);
             })
         };
 
@@ -317,18 +327,25 @@ overload! {
 
     /// Construct time point from milliseconds since the epoch.
     pub fn new(milliseconds: &StdMillisecondsDuration) -> StdMillisecondsTimePoint {
-        StdMillisecondsTimePoint::from_duration(milliseconds.count())
+        StdMillisecondsTimePoint::from_duration(milliseconds)
     }
 
     /// Construct time point from seconds-resolution time point.
     pub fn new(other: &StdSecondsTimePoint) -> StdMillisecondsTimePoint {
         StdMillisecondsTimePoint::from_other(other)
         }
+
+    /// copy millisecond time point
+    pub fn new(other: &StdMillisecondsTimePoint) -> StdMillisecondsTimePoint {
+    StdMillisecondsTimePoint::copy_from(other)
+    }
     }
 }
 
 // overloading the  round
-
+// ### Limitations
+//
+// This test covers only conversions from milliseconds to seconds.
 overload! {
     impl StdMillisecondsTimePoint {
 
@@ -344,6 +361,10 @@ overload! {
 }
 
 // overloading the floor
+//
+// ### Limitations
+//
+// This test covers only conversions from milliseconds to seconds.
 overload! {
     impl StdMillisecondsTimePoint {
 
@@ -358,6 +379,10 @@ overload! {
 }
 
 // overloading the ceil
+//
+// ### Limitations
+//
+// This test covers only conversions from milliseconds to seconds.
 overload! {
     impl StdMillisecondsTimePoint {
 
@@ -372,7 +397,11 @@ overload! {
 }
 
 // overloading the time_point_cast
-
+//
+// ### Limitations
+//
+// This test covers only conversions between two timepoint types defined
+// in this test.
 overload! {
     impl StdMillisecondsTimePoint {
 
@@ -401,6 +430,14 @@ fn test_time_point_constructors() {
     let seconds = StdSecondsTimePoint::from_seconds(2);
     let converted = StdMillisecondsTimePoint::new(&seconds);
     assert_eq!(converted.milliseconds_since_epoch(), 2000);
+
+    // Test the copy constructor
+    let original = StdMillisecondsTimePoint::new(&duration);
+    let copied = StdMillisecondsTimePoint::new(&original);
+    assert_eq!(
+        copied.milliseconds_since_epoch(),
+        original.milliseconds_since_epoch()
+    );
 }
 
 #[test]
