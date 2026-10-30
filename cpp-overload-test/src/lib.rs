@@ -11,6 +11,7 @@ pub mod stdcpp {
     // Add new modules for each type here, in alphabetical order.
     pub mod forward_list;
     pub mod hash;
+    pub mod list;
 }
 
 // Checks that `build.rs` rebuilds changed `cpp!` code, see `rerun-check.sh`.

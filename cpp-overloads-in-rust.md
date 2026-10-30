@@ -28,6 +28,7 @@ See the Limitations section below the table for more details.
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | [hash]                     | ✅           | ✅        |            |           |
+| [list]                     | ✅           | 🌗⚙️[^3]  | 🌗[^4]     | ✅         |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -37,9 +38,13 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 [hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
+[list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/list.rs
+[stdcpp-list.rs]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/examples/stdcpp-list.rs
 
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.
+[^3]: `front`/`back` have the same `&self`/`&mut self` problem as `forward_list`, see the failing `back` overload in [stdcpp-list.rs].
+[^4]: `insert`, `erase` and `splice` all work, but iterator positions can't borrow the list (otherwise you couldn't insert while holding one), so Rust can't check that an iterator belongs to the list it's used on.
 
 ## Limitations
 

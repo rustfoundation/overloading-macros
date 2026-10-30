@@ -1,0 +1,47 @@
+error: proc macro panicked
+  --> cpp-overload-test/examples/stdcpp-list.rs:31:1
+   |
+31 | / overload! {
+32 | |     impl StdListX {
+33 | |         /// Get the last element of the list as a constant reference.
+34 | |         ///
+...  |
+55 | | }
+   | |_^
+   |
+   = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got back: &self and back: &mut self
+
+error[E0119]: conflicting implementations of trait `InsertArgs<StdListY>` for type `(&StdListIterY, i32)`
+  --> cpp-overload-test/examples/stdcpp-list.rs:66:1
+   |
+66 | / overload! {
+67 | |     impl StdListY {
+68 | |         /// Insert `value` before `pos`.
+69 | |         fn insert(&mut self, _pos: &StdListIterY, _value: T) -> StdListIterY {
+...  |
+91 | | }
+   | | ^
+   | | |
+   | |_first implementation here
+   |   conflicting implementation for `(&StdListIterY, i32)`
+   |
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0119]: conflicting implementations of trait `SpliceArgs<StdListZ>` for type `(&StdListIterZ, &mut StdListZ)`
+   --> cpp-overload-test/examples/stdcpp-list.rs:102:1
+    |
+102 | / overload! {
+103 | |     impl StdListZ {
+104 | |         /// Move all elements of `other` before `pos`, from a C++ `list&`.
+105 | |         fn splice(&mut self, _pos: &StdListIterZ, _other: &mut StdListZ) {
+...   |
+126 | | }
+    | | ^
+    | | |
+    | |_first implementation here
+    |   conflicting implementation for `(&StdListIterZ, &mut StdListZ)`
+    |
+    = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0119`.
+error: could not compile `cpp-overload-test` (example "stdcpp-list") due to 3 previous errors
