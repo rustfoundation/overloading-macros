@@ -26,6 +26,7 @@ See the Limitations section below the table for more details.
 | *Non-Template Classes*     | Constructors | Accessors | Modifiers  | Transforms |
 | TODO                       | ？           | ？        |  ？        | ？         |
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
+| [array]                    | 🌗⛔⚙️[^3]   | 🌗⚙️[^4]  |            |            |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
@@ -34,10 +35,18 @@ Accessors: Get information about the class, called as `instance->get(...)`<br/>
 Modifiers: Add or change the items in a list class, called as `instance->put(...)`<br/>
 Transforms: Rearrange the items in a list class, called as `instance->sort(...)`<br/>
 
+[array]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/array.rs
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.
+[^3]: A wrapper type must be provided for each array size, since the macro fails to retain const
+    generics. As both C++ default-initialisation and value-initialisation take no arguments, only
+    value-initialisation is supported.
+[^4]: The Rust `get` takes the index as a tag type argument, with one overload for each index.
+    The overloads that return a reference require `'static` lifetimes, since the macro eliminates
+    lifetimes. `at`, `front`, and the other accessors which differ only in being `const` cannot
+    overload on `self`.
 
 ## Limitations
 
@@ -53,6 +62,8 @@ Overload macro missing functionality:
   - this can be worked around using associated functions, but the ergonomics suffer
 - Generic types:
   - this makes representing C++ templated types with generic Rust types impossible
+  - const generics are also omitted, so the size `N` in `std::array<T, N>` and the index `I` in
+    `std::get<I>` cannot be generic
   - doesn't support `impl Iterator` or `where I: Iterator` as arguments, but supports
     `&dyn Iterator` (which is less ergonomic)
 - Lifetimes:
@@ -71,6 +82,8 @@ Some overloads are confusing or hard to use, so we might not want to represent t
   - this can be resolved by skipping overloads for initializer lists
 - `&dyn Iterator` overloads require a type cast
   - this could be resolved with improvements to the macro, or with an iterator adapter type
+- since C++ move constructors leave the source object in a valid state, the Rust overload takes
+  `&mut` rather than taking the value, something that Rust users do not expect from a move
 
 Type inference doesn't work on some overloads: this is likely a macro or compiler experiment limitation.
 
@@ -101,6 +114,11 @@ These overloads have no equivalent in Rust:
 - legacy iterator pointer-like methods for various positions (`before_begin`/`begin`/`end`)
 - initializer list methods: these are also a common source of overload conflicts for C++ templated
   lists
+- the cases in which C++ selects overloads based on syntax rather than on the argument types, for
+  example the default-initialisation of `std::array` (`std::array<int, 3> a;`) and
+  value-initialisation (`a{}`)
+- class template argument deduction (CTAD), which determines a template argument such as `N` from
+  the constructor arguments
 
 #### Equivalences & Supersets
 
