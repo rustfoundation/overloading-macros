@@ -1,0 +1,15 @@
+   Compiling cpp-overload-test v0.0.0 (/home/lynndabel/outreachyyy/overloading-macros/cpp-overload-test)
+error: proc macro panicked
+  --> cpp-overload-test/examples/stdcpp-unordered-multiset.rs:23:1
+   |
+23 | / overload! {
+24 | |     impl StdUnorderedMultiset {
+25 | |         /// ### Incompatibilities
+26 | |         ///
+...  |
+37 | | }
+   | |_^
+   |
+   = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got begin: &self and begin: &mut self
+
+error: could not compile `cpp-overload-test` (example "stdcpp-unordered-multiset") due to 1 previous error
