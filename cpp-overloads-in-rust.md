@@ -28,6 +28,7 @@ See the Limitations section below the table for more details.
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | [hash]                     | ✅           | ✅        |            |           |
+| [unordered_map]            | ✅           | 🌗⚙️[^3]  |🌗⚙️       |          |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -37,9 +38,12 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 [hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
+[unordered_map]:  https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_map.rs
+
 
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.
+[^3]: `find` and `max_load_factor` use associated functions instead of methods due to macro limitations with `&self` vs `&mut self`.
 
 ## Limitations
 

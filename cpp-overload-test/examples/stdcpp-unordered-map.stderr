@@ -1,0 +1,47 @@
+error: proc macro panicked
+  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:63:1
+   |
+63 | / overload! {
+64 | |     impl StdUnorderedMap {
+65 | |         /// Get the maximum load factor, a `const` method in C++.
+66 | |         ///
+...  |
+87 | | }
+   | |_^
+   |
+   = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got max_load_factor: &self and max_load_factor: &mut self
+
+error[E0425]: cannot find type `Q` in this scope
+   --> cpp-overload-test/examples/stdcpp-unordered-map.rs:111:38
+    |
+111 |         fn contains<Q>(&self, _key: &Q) -> bool {
+    |                                      ^ not found in this scope
+    |
+note: similarly named type alias `K` defined here
+   --> cpp-overload-test/examples/stdcpp-unordered-map.rs:20:1
+    |
+ 20 | type K = std::ffi::c_int;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+help: a type alias with a similar name exists
+    |
+111 -         fn contains<Q>(&self, _key: &Q) -> bool {
+111 +         fn contains<Q>(&self, _key: &K) -> bool {
+    |
+
+error[E0119]: conflicting implementations of trait `InsertArgs<StdUnorderedMap>` for type `(KeyValue,)`
+  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:39:1
+   |
+39 | / overload! {
+40 | |     impl StdUnorderedMap {
+41 | |         /// Insert a copy of `value`, the C++ `insert(const value_type&)` overload.
+42 | |         fn insert(&mut self, _value: KeyValue) -> bool {
+...  |
+60 | | }
+   | | ^
+   | | |
+   | |_first implementation here
+   |   conflicting implementation for `(KeyValue,)`
+   |
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+Some errors have detailed explanations: E0119, E0425.
