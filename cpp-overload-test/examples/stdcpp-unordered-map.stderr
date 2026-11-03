@@ -1,47 +1,32 @@
 error: proc macro panicked
-  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:63:1
+  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:32:1
    |
-63 | / overload! {
-64 | |     impl StdUnorderedMap {
-65 | |         /// Get the maximum load factor, a `const` method in C++.
-66 | |         ///
+32 | / overload! {
+33 | |     impl StdUnorderedMap {
+34 | |         /// Gets the maximum load factor, a `const` method in C++.
+35 | |         ///
 ...  |
-87 | | }
+54 | | }
    | |_^
    |
    = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got max_load_factor: &self and max_load_factor: &mut self
 
 error[E0425]: cannot find type `Q` in this scope
-   --> cpp-overload-test/examples/stdcpp-unordered-map.rs:111:38
-    |
-111 |         fn contains<Q>(&self, _key: &Q) -> bool {
-    |                                      ^ not found in this scope
-    |
+  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:80:38
+   |
+80 |         fn contains<Q>(&self, _key: &Q) -> bool {
+   |                                      ^ not found in this scope
+   |
 note: similarly named type alias `K` defined here
-   --> cpp-overload-test/examples/stdcpp-unordered-map.rs:20:1
-    |
- 20 | type K = std::ffi::c_int;
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:13:1
+   |
+13 | type K = std::ffi::c_int;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
 help: a type alias with a similar name exists
-    |
-111 -         fn contains<Q>(&self, _key: &Q) -> bool {
-111 +         fn contains<Q>(&self, _key: &K) -> bool {
-    |
-
-error[E0119]: conflicting implementations of trait `InsertArgs<StdUnorderedMap>` for type `(KeyValue,)`
-  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:39:1
    |
-39 | / overload! {
-40 | |     impl StdUnorderedMap {
-41 | |         /// Insert a copy of `value`, the C++ `insert(const value_type&)` overload.
-42 | |         fn insert(&mut self, _value: KeyValue) -> bool {
-...  |
-60 | | }
-   | | ^
-   | | |
-   | |_first implementation here
-   |   conflicting implementation for `(KeyValue,)`
+80 -         fn contains<Q>(&self, _key: &Q) -> bool {
+80 +         fn contains<Q>(&self, _key: &K) -> bool {
    |
-   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-Some errors have detailed explanations: E0119, E0425.
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `cpp-overload-test` (example "stdcpp-unordered-map") due to 2 previous errors

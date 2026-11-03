@@ -28,25 +28,15 @@ struct KeyValue {
 #[expect(dead_code, reason = "Incompatible overloads can't be used")]
 struct StdUnorderedMap(Vec<KeyValue>);
 
-// Modifiers: `insert(...)`
-overload! {
-    impl StdUnorderedMap {
-        /// Insert a copy of `value`, the C++ `insert(const value_type&)` overload.
-        fn insert(&mut self, _value: KeyValue) -> bool {
-            todo!()
-        }
-    }
-}
-
 // Accessors: `max_load_factor(...)`
 overload! {
     impl StdUnorderedMap {
-        /// Gets the maximum load factor, corresponding to the C++ `const` method.
+        /// Gets the maximum load factor, a `const` method in C++.
         ///
         /// ### Incompatibilities
         ///
-        /// The `overload!` macro can't distinguish between `&self` and `&mut self`
-        /// receivers. These overloads also differ in their arguments and return types.
+        /// The `overload!` macro requires all overloads in a group to have matching
+        /// receiver kinds, but `max_load_factor` uses both `&self` and `&mut self`.
         ///
         /// ### Workarounds
         ///
@@ -76,8 +66,8 @@ overload! {
         ///
         /// ### Incompatibilities
         ///
-        /// The `overload!` macro removes generic parameters, so the generated code
-        /// cannot use `Q`.
+        /// The `overload!` macro does not preserve generic parameters, leaving `Q`
+        /// unresolved in the generated code.
         ///
         /// ### Limitations
         ///

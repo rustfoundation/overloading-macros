@@ -159,7 +159,7 @@ impl StdUnorderedMap {
 
     /// ### Limitations
     ///
-    /// I has to first Collect into a Rust `Vec`, then copies into a C++ vector.
+    /// It has to first Collect into a Rust `Vec`, then copies into a C++ vector.
     ///
     /// `std::from_range` needs a recent standard library. But on older ones like GCC 13,this falls back to the iterator-range constructor.
     fn from_iter(iter: &mut dyn Iterator<Item = KeyValue>) -> StdUnorderedMap {
