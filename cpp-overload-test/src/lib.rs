@@ -10,8 +10,8 @@
 pub mod stdcpp {
     // Add new modules for each type here, in alphabetical order.
     pub mod forward_list;
-    pub mod stack;
     pub mod hash;
+    pub mod stack;
     pub mod unordered_multiset;
 }
 
