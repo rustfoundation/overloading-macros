@@ -2,11 +2,6 @@
 //!
 //! This file tests four constructors that can be represented in Rust.
 //!
-//! ### Limitations
-//!
-//! C++ time points use clock and duration types.
-//! This test uses fixed types instead of supporting all possible types.
-//!
 //! This test focuses on selected overloads rather than reproducing
 //! the complete c++ API. Overloaded operators, assignment operations,
 //! and other excluded are outside it's scope.
@@ -22,6 +17,11 @@ use std::marker::PhantomData;
 
 cpp! {{
     #include <chrono>
+
+// ### Limitations
+//
+// C++ time points use clock and duration types.
+// This test uses fixed types instead of supporting all possible types.
 
     using TestClock = std::chrono::system_clock;
     using TestMillisecondsDuration = std::chrono::milliseconds;
@@ -51,6 +51,7 @@ pub struct StdMillisecondsDuration(*mut c_void, PhantomData<()>);
 pub struct StdSecondsDuration(*mut c_void, PhantomData<()>);
 
 #[cfg_attr(not(test), expect(dead_code, reason = "Only used in tests"))]
+#[cfg_attr(test, allow(dead_code))]
 impl StdMillisecondsDuration {
     /// Construct a millisecond duration from its tick count.
     fn from_count(milliseconds: c_longlong) -> Self {
