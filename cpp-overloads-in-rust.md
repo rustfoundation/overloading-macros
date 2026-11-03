@@ -28,7 +28,7 @@ See the Limitations section below the table for more details.
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | [hash]                     | ✅           | ✅        |            |           |
-| [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         |            |
+| [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -43,6 +43,7 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.
 [^3]: The overload macro can't overload on `&self` vs `&mut self`, which limits representing some accessor overloads.
+[^4]: `extract`, `merge`, and `erase_if` still need analysis. These are C++17/C++20 node handle and non-member function overloads.
 
 ## Limitations
 
