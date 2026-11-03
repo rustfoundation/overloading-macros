@@ -7,6 +7,10 @@
 
 use cpp::cpp;
 use splat_overload::overload;
+// ### Limitations
+//
+// We want `c_bool` here, but rust only has `c_char` , so `is_empty` converts the
+// `char` back to bool .
 use std::ffi::{c_char, c_size_t, c_void};
 use std::marker::PhantomData;
 
@@ -15,6 +19,8 @@ cpp! {{
     #include <stack>
     #include <cstddef>
     #include <utility>
+    #include <vector>
+    #include <ranges>
 }}
 
 pub type T = std::ffi::c_int;
@@ -142,6 +148,15 @@ impl StdStack {
     }
 }
 
+// Constructors: `new(...)`
+//
+// ### Limitations
+//
+// These contructors are not wrapped yet:
+// - `stack(const Container&)` and `stack(Container&&)`: they take a cpp `std::deque<int>`,
+// so they need a rust wrapper for `deque` first, which is not done yet.
+// - constructors that differ by allocator argument : ignored, because they are not interesting overloads
+// to cover.
 overload! {
     impl StdStack {
         /// an empty stack
@@ -149,11 +164,23 @@ overload! {
             StdStack::default()
         }
         /// Clone stack items into a new stack from a shared stack reference
+        ///
+        /// ### Ergonomics
+        ///
+        /// `new(&s)` copies and `new(&mut s)` moves, but at the call site they look almost
+        /// same and do very different things,
+        /// it will be very easy to mix them up.
         pub fn new(other: &StdStack) -> StdStack {
             StdStack::copy_from(other)
         }
 
         /// Move stack items into a new stack from a mutable stack reference.
+        ///
+        /// ### Limitations
+        ///
+        /// After a cpp move, the old stack still exists in a "valid but unspecified" state,
+        /// which is empty in practice. A Rust moves makes the old variable unusauable ,
+        /// so idiomatic rust would take the stack by value instead of `&mut`
         pub fn new(other: &mut StdStack) -> StdStack {
             StdStack::move_from(other)
         }
@@ -163,6 +190,21 @@ overload! {
             StdStack::from_slice(items)
         }
 
+        /// constructs a stack from an iterator
+        ///
+        /// ### Limitations
+        /// The caller has to cast the iterator, like `&mut iter as &mut dyn Iterator<Item = _>`
+        /// because rust doesnot automatically convert it to `dyn Iterator` automatically
+        ///
+        /// It used the dyn Iterator and not a generic `impl Iterator` because overload!
+        /// doesn't support generics in this position yet and a `impl Iterator`
+        /// could overlap with the `&[T]` overload.
+        ///
+        /// the items are basically copied twice, first into a  Rust `Vec` and
+        /// then into a cpp `std::vector`.
+        /// its simple, but it do the extra work.
+        /// In c++, we need a `std::from_range` tag to tell this constructor apart from the others.
+        /// Rust doesnot need a tag because argu,ment types are already there.
         pub fn new(iter: &mut dyn Iterator<Item = T>) -> StdStack {
             StdStack::from_iter(iter)
         }
