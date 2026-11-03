@@ -8,7 +8,7 @@ IMPORTANT: You **must** only open one pull request (PR).
 
 **Do not** use AI to write GitHub descriptions, GitHub comments, code comments, or Zulip chats. Write in your native language, or at your current English level. In your PR description, you must tell us how you used AI. You must review code yourself before you open a PR.
 
-For the best learning experience, write the code yourself, without using AI.
+For the best learning experience, write the code yourself, without using AI. Using LLMs to generate code is heavily restricted, and generating large amounts of code is banned.
 
 Applicants must follow the [Rust Project AI/LLM policy][llm-policy].
 
@@ -25,11 +25,12 @@ This coding task focuses on Rust and C++ overloads. It is ok to skip drop/destru
 [tracking-issue]: https://github.com/rustfoundation/overloading-macros/issues/19
 [outreachy-zulip]: https://rust-lang.zulipchat.com/#narrow/channel/578347-outreachy/topic/Overloading.20Applicant.20Help.20Oct.202026/with/628605857.01
 
-1. Write Rust wrappers for 3-5 C++ overloads on that type:
+1. Write Rust wrappers for that C++ type, for 3-5 different overloaded method names:
     - [ ] Create a new file named after your type in [overloading-macros/cpp-overload-test/src/stdcpp](https://github.com/rustfoundation/overloading-macros/tree/main/cpp-overload-test/src/stdcpp)
     - [ ] Wrap constructors first, writing tests to make sure the correct constructor is called
     - [ ] Explain any potential compatibility issues in a `Limitations` doc section 
     - [ ] Explain usability issues in an `Ergonomics` doc section
+    - [ ] Check that you have implemented all the overloads for each method name, or documented why you can't
     - [ ] Push your changes and wait for a review
 2. Add a separate example with some failing overloads
     - [ ] Create a new file named after your type in [overloading-macros/cpp-overload-test/examples](https://github.com/rustfoundation/overloading-macros/tree/main/cpp-overload-test/examples)

@@ -40,7 +40,7 @@ overload! {
         }
 
         /// Construct a list filled with `count` instances of the given value.
-        fn new(_value: T, _count: c_size_t) -> StdForwardListT {
+        fn new(_count: c_size_t, _value: T) -> StdForwardListT {
             todo!()
         }
 
@@ -60,9 +60,9 @@ overload! {
         ///
         /// ### Incompatibilities
         ///
-        /// This overload has the same types as `new(value, count)` when `T` is `c_size_t`, but different
+        /// This overload has the same types as `new(count, value)` when `T` is `c_size_t`, but different
         /// semantics:
-        /// - `new(value, count)` fills the list with `count` instances of `value`.
+        /// - `new(count, value)` fills the list with `count` instances of `value`.
         /// - `new(a, b)` fills the list with two values: `a` and `b`.
         fn new(_a: T, _b: T) -> StdForwardListT {
             todo!()
