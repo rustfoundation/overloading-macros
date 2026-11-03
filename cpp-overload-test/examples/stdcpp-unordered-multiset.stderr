@@ -1,4 +1,3 @@
-   Compiling cpp-overload-test v0.0.0 (/home/lynndabel/outreachyyy/overloading-macros/cpp-overload-test)
 error: proc macro panicked
   --> cpp-overload-test/examples/stdcpp-unordered-multiset.rs:23:1
    |
