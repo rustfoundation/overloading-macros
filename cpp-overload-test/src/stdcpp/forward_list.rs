@@ -138,10 +138,10 @@ impl StdForwardList {
         StdForwardList(list, PhantomData)
     }
 
-    fn repeat_with(value: T, count: c_size_t) -> StdForwardList {
+    fn repeat_with(count: c_size_t, value: T) -> StdForwardList {
         let list = unsafe {
-            cpp!([value as "int", count as "size_t"] -> *mut c_void as "std::forward_list<int>*" {
-                return new std::forward_list<int>(value, count);
+            cpp!([count as "size_t", value as "int"] -> *mut c_void as "std::forward_list<int>*" {
+                return new std::forward_list<int>(count, value);
             })
         };
         StdForwardList(list, PhantomData)
@@ -466,8 +466,8 @@ overload! {
         }
 
         /// Construct a list filled with `count` instances of the given value.
-        pub fn new(value: T, count: c_size_t) -> StdForwardList {
-            StdForwardList::repeat_with(value, count)
+        pub fn new(count: c_size_t, value: T) -> StdForwardList {
+            StdForwardList::repeat_with(count, value)
         }
 
         /// Construct a list by copying items from a slice.
@@ -687,7 +687,7 @@ pub fn test_forward_list() {
     let repeat_default: StdForwardList = StdForwardList::new(10_usize);
     assert_eq!(repeat_default.front_const(), Some(&0));
 
-    let repeat_with: StdForwardList = StdForwardList::new(42, 100);
+    let repeat_with: StdForwardList = StdForwardList::new(100_usize, 42);
     assert_eq!(repeat_with.front_const(), Some(&42));
 
     // ### Limitations

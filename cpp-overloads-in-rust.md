@@ -26,8 +26,10 @@ See the Limitations section below the table for more details.
 | *Non-Template Classes*     | Constructors | Accessors | Modifiers  | Transforms |
 | TODO                       | ？           | ？        |  ？        | ？         |
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
-| [array]                    | 🌗⛔⚙️[^3]   | 🌗⚙️[^4]  |            |            |
+| [array]                    | 🌗⛔⚙️[^ac]  | 🌗⚙️[^aa] |            |            |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
+| [hash]                     | ✅           | ✅        |            |           |
+| [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -37,16 +39,20 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 
 [array]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/array.rs
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
+[hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
+[unordered_multiset]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_multiset.rs
 
-[^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
-[^2]: `insert_after` and `splice_after` still need to be analysed.
-[^3]: A wrapper type must be provided for each array size, since the macro fails to retain const
+[^ac]: A wrapper type must be provided for each array size, since the macro fails to retain const
     generics. As both C++ default-initialisation and value-initialisation take no arguments, only
     value-initialisation is supported.
-[^4]: The Rust `get` takes the index as a tag type argument, with one overload for each index.
+[^aa]: The Rust `get` takes the index as a tag type argument, with one overload for each index.
     The overloads that return a reference require `'static` lifetimes, since the macro eliminates
     lifetimes. `at`, `front`, and the other accessors which differ only in being `const` cannot
     overload on `self`.
+[^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
+[^2]: `insert_after` and `splice_after` still need to be analysed.
+[^3]: The overload macro can't overload on `&self` vs `&mut self`, which limits representing some accessor overloads.
+[^4]: `extract`, `merge`, and `erase_if` still need analysis. These are C++17/C++20 node handle and non-member function overloads.
 
 ## Limitations
 
