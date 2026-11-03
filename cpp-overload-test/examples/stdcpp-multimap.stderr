@@ -1,0 +1,31 @@
+error: proc macro panicked
+  --> cpp-overload-test/examples/stdcpp-multimap.rs:33:1
+   |
+33 | / overload! {
+34 | |     impl StdMultimapA {
+35 | |         /// Find an element with the key, from a shared reference.
+36 | |         ///
+...  |
+53 | | }
+   | |_^
+   |
+   = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got find: &self and find: &mut self
+
+error[E0119]: conflicting implementations of trait `EraseArgs<StdMultimapB>` for type `(i32,)`
+  --> cpp-overload-test/examples/stdcpp-multimap.rs:65:1
+   |
+65 | / overload! {
+66 | |     impl StdMultimapB {
+67 | |         /// Erase every element whose key equals `key`.
+68 | |         fn erase(&mut self, _key: K) -> c_size_t {
+...  |
+84 | | }
+   | | ^
+   | | |
+   | |_first implementation here
+   |   conflicting implementation for `(i32,)`
+   |
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0119`.
+error: could not compile `cpp-overload-test` (example "stdcpp-multimap") due to 2 previous errors

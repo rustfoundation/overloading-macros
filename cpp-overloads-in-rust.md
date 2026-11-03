@@ -27,7 +27,8 @@ See the Limitations section below the table for more details.
 | TODO                       | ？           | ？        |  ？        | ？         |
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
-| TODO                       | ？           | ？        |  ？        | ？         |
+| [multimap]                 | ✅           | 🌗⚙️？[^3] | 🌗？[^4]   |            |
+
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
 Accessors: Get information about the class, called as `instance->get(...)`<br/>
@@ -35,9 +36,13 @@ Modifiers: Add or change the items in a list class, called as `instance->put(...
 Transforms: Rearrange the items in a list class, called as `instance->sort(...)`<br/>
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
+[multimap]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/multimap.rs
 
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.
+[^3]: `lower_bound`, `upper_bound`, `equal_range` and `at` still need to be analysed.
+[^4]: `erase(key)` and `erase(pos)` conflict unless the iterator is a distinct type. `emplace` and `extract` still need to be analysed.
+
 
 ## Limitations
 
