@@ -11,6 +11,7 @@ pub mod stdcpp {
     // Add new modules for each type here, in alphabetical order.
     pub mod forward_list;
     pub mod hash;
+    pub mod u32string_view;
     pub mod unordered_multiset;
 }
 
