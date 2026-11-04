@@ -29,6 +29,7 @@ See the Limitations section below the table for more details.
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | [hash]                     | ✅           | ✅        |            |           |
 | [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
+| [time_point]               | ✅           | ?		|	   | ✅         |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -37,8 +38,12 @@ Modifiers: Add or change the items in a list class, called as `instance->put(...
 Transforms: Rearrange the items in a list class, called as `instance->sort(...)`<br/>
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
+<<<<<<< HEAD
 [hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
 [unordered_multiset]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_multiset.rs
+=======
+[time_point]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/time_point.rs
+>>>>>>> a9a3bb4 (update code formatting and results of analysis)
 
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.

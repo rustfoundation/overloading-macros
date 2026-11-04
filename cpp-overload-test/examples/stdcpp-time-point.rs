@@ -33,17 +33,17 @@ type SameTimePoint = StdTimePoint;
 // Rust cannot represent both as separate overloads.
 
 overload! {
-	impl StdTimePoint {
+    impl StdTimePoint {
 
-	/// Copy constructor
-	fn new(_other: &StdTimePoint) -> StdTimePoint {
-		todo!()
-	}
+    /// Copy constructor
+    fn new(_other: &StdTimePoint) -> StdTimePoint {
+        todo!()
+    }
 
-	/// Converting constructor
-	fn new(_other: &SameTimePoint) -> StdTimePoint {
-		todo!()
-	}
+    /// Converting constructor
+    fn new(_other: &SameTimePoint) -> StdTimePoint {
+        todo!()
+    }
     }
 }
 
