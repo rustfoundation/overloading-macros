@@ -30,6 +30,7 @@ See the Limitations section below the table for more details.
 | [hash]                     | ✅           | ✅        |            |           |
 | [unordered_map]            | ✅           | 🌗⚙️[^5]  | 🌗⚙️       |          |
 | [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
+| [vector]                   | 🌗⛔[^5]     | ⚙️？[^6]  | 🌗？[^7]   | ？[^8]     |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -41,12 +42,35 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 [hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
 [unordered_map]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_map.rs
 [unordered_multiset]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_multiset.rs
+[vector]: cpp-overload-test/src/stdcpp/vector.rs
+[vector-failures]: cpp-overload-test/examples/stdcpp-vector.rs
+[vector-diagnostics]: cpp-overload-test/examples/stdcpp-vector.stderr
 
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.
 [^3]: The overload macro can't overload on `&self` vs `&mut self`, which limits representing some accessor overloads.
 [^4]: `extract`, `merge`, and `erase_if` still need analysis. These are C++17/C++20 node handle and non-member function overloads.
 [^5]: `find` and `max_load_factor` use associated functions instead of methods due to macro limitations with `&self` vs `&mut self`.
+
+[^5]:
+    Constructor families work together for `T = c_int`, excluding allocator variants.
+    Initializer-list input is limited to one, two, or three elements; `from_range` uses a
+    buffered Rust iterator and C++ span. With `T = c_size_t`, the translated one- and
+    two-element initializer-list signatures conflict with count and fill constructors.
+    These are Rust translation conflicts, not conflicting C++ signatures; see the
+    [failing example][vector-failures] and [compiler diagnostics][vector-diagnostics].
+
+[^6]:
+    The tested `front(&self)` / `front(&mut self)` pair is rejected by the macro's
+    receiver restriction. Other accessor overloads were not independently tested.
+    Separate method names are a workaround; see [vector failures][vector-failures].
+
+[^7]:
+    Both `resize` overloads and both `erase` overloads pass tests. `erase` adapts C++
+    iterator arguments and results into checked indices. Other modifier overload sets,
+    including `insert`, still need analysis.
+
+[^8]: Vector transforms have not been analysed; this does not assert an absence of overloads.
 
 ## Limitations
 

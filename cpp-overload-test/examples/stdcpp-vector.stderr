@@ -1,0 +1,47 @@
+error: proc macro panicked
+  --> cpp-overload-test/examples/stdcpp-vector.rs:76:1
+   |
+76 | / overload! {
+77 | |     impl StdVectorFront {
+78 | |         fn front(&self) -> Option<&std::ffi::c_int> {
+79 | |             self.0.first()
+...  |
+86 | | }
+   | |_^
+   |
+   = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got front: &self and front: &mut self
+
+error[E0119]: conflicting implementations of trait `NewArgs<StdVectorT>` for type `(usize,)`
+  --> cpp-overload-test/examples/stdcpp-vector.rs:53:1
+   |
+53 | / overload! {
+54 | |     impl StdVectorT {
+55 | |         fn new(_count: c_size_t) -> StdVectorT {
+56 | |             todo!()
+...  |
+71 | | }
+   | | ^
+   | | |
+   | |_first implementation here
+   |   conflicting implementation for `(usize,)`
+   |
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0119]: conflicting implementations of trait `NewArgs<StdVectorT>` for type `(usize, usize)`
+  --> cpp-overload-test/examples/stdcpp-vector.rs:53:1
+   |
+53 | / overload! {
+54 | |     impl StdVectorT {
+55 | |         fn new(_count: c_size_t) -> StdVectorT {
+56 | |             todo!()
+...  |
+71 | | }
+   | | ^
+   | | |
+   | |_first implementation here
+   |   conflicting implementation for `(usize, usize)`
+   |
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0119`.
+error: could not compile `cpp-overload-test` (example "stdcpp-vector") due to 3 previous errors

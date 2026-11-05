@@ -13,6 +13,7 @@ pub mod stdcpp {
     pub mod hash;
     pub mod unordered_map;
     pub mod unordered_multiset;
+    pub mod vector;
 }
 
 // Checks that `build.rs` rebuilds changed `cpp!` code, see `rerun-check.sh`.
