@@ -9,7 +9,7 @@
 //!
 //! The `cpp!` macro doesn't work here, because of technical limitations it can only run one build
 //! per crate. (Examples and binaries are built separately from `lib.rs`.)
-//! To add C++ code here, use /* ... */ code comment blocks, or just skip it. 
+//! To add C++ code here, use /* ... */ code comment blocks, or just skip it.
 
 #![feature(splat, tuple_trait, c_size_t)]
 #![allow(incomplete_features)]
