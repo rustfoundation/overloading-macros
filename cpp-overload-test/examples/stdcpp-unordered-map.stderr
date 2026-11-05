@@ -1,0 +1,32 @@
+error: proc macro panicked
+  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:32:1
+   |
+32 | / overload! {
+33 | |     impl StdUnorderedMap {
+34 | |         /// Gets the maximum load factor, a `const` method in C++.
+35 | |         ///
+...  |
+54 | | }
+   | |_^
+   |
+   = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got max_load_factor: &self and max_load_factor: &mut self
+
+error[E0425]: cannot find type `Q` in this scope
+  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:80:38
+   |
+80 |         fn contains<Q>(&self, _key: &Q) -> bool {
+   |                                      ^ not found in this scope
+   |
+note: similarly named type alias `K` defined here
+  --> cpp-overload-test/examples/stdcpp-unordered-map.rs:13:1
+   |
+13 | type K = std::ffi::c_int;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+help: a type alias with a similar name exists
+   |
+80 -         fn contains<Q>(&self, _key: &Q) -> bool {
+80 +         fn contains<Q>(&self, _key: &K) -> bool {
+   |
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `cpp-overload-test` (example "stdcpp-unordered-map") due to 2 previous errors
