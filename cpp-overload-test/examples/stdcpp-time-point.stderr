@@ -1,14 +1,13 @@
-warning: `cpp-overload-test` (lib) generated 1 warning
    Compiling cpp-overload-test v0.0.0 (/home/user/outreachy/contribute/rust/overloading/overloading-macros/cpp-overload-test)
 error[E0119]: conflicting implementations of trait `NewArgs<StdTimePoint>` for type `(&StdTimePoint,)`
-  --> cpp-overload-test/examples/stdcpp-time-point.rs:33:1
+  --> cpp-overload-test/examples/stdcpp-time-point.rs:35:1
    |
-33 | / overload! {
-34 | |     impl StdTimePoint {
-35 | |
-36 | |     /// Copy constructor
+35 | / overload! {
+36 | |     impl StdTimePoint {
+37 | |
+38 | |     /// Copy constructor
 ...  |
-46 | | }
+48 | | }
    | | ^
    | | |
    | |_first implementation here
