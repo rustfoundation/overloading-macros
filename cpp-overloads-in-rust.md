@@ -30,7 +30,7 @@ See the Limitations section below the table for more details.
 | [hash]                     | ✅           | ✅        |            |           |
 | [unordered_map]            | ✅           | 🌗⚙️[^5]  | 🌗⚙️       |          |
 | [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
-| [time_point]                      | ✅           | ✅	             |               | ✅           |
+| [time_point]               | ✅           | ✅               |               | ✅           |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
