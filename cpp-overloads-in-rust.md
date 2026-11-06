@@ -29,6 +29,7 @@ See the Limitations section below the table for more details.
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | [hash]                     | ✅           | ✅        |            |           |
 | [multimap]                 | ✅           | 🌗⚙️？[^ma] | 🌗？[^mm] |            |
+| [unordered_map]            | ✅           | 🌗⚙️[^5]  | 🌗⚙️       |          |
 | [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
@@ -40,6 +41,7 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 [hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
 [multimap]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/multimap.rs
+[unordered_map]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_map.rs
 [unordered_multiset]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_multiset.rs
 
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
