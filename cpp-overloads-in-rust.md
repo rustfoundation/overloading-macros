@@ -30,6 +30,7 @@ See the Limitations section below the table for more details.
 | [hash]                     | ✅           | ✅        |            |           |
 | [unordered_map]            | ✅           | 🌗⚙️[^5]  | 🌗⚙️       |          |
 | [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
+| [time_point]               | ✅           | ✅               |               | ✅           |
 | TODO                       | ？           | ？        |  ？        | ？         |
 
 Constructors: Create an instance of the class, called as `Class::Class(...)`<br/>
@@ -39,6 +40,7 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 [hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
+[time_point]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/time_point.rs
 [unordered_map]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_map.rs
 [unordered_multiset]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_multiset.rs
 
