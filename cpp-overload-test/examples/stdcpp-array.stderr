@@ -1,0 +1,78 @@
+error: proc macro panicked
+   --> cpp-overload-test/examples/stdcpp-array.rs:85:1
+    |
+ 85 | / overload! {
+ 86 | |     impl StdArray3 {
+ 87 | |         /// Get a mutable reference to the element at `pos`.
+ 88 | |         ///
+...   |
+111 | | }
+    | |_^
+    |
+    = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got at: &mut self and at: &self
+
+error[E0425]: cannot find type `N` in this scope
+  --> cpp-overload-test/examples/stdcpp-array.rs:68:31
+   |
+68 |         fn new() -> StdArrayN<N> {
+   |                               ^ not found in this scope
+   |
+note: similarly named type alias `T` defined here
+  --> cpp-overload-test/examples/stdcpp-array.rs:35:1
+   |
+35 | type T = std::ffi::c_int;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+help: a type alias with a similar name exists
+   |
+68 -         fn new() -> StdArrayN<N> {
+68 +         fn new() -> StdArrayN<T> {
+   |
+
+error[E0425]: cannot find type `N` in this scope
+  --> cpp-overload-test/examples/stdcpp-array.rs:73:36
+   |
+73 |         fn new(_a: T) -> StdArrayN<N> {
+   |                                    ^ not found in this scope
+   |
+note: similarly named type alias `T` defined here
+  --> cpp-overload-test/examples/stdcpp-array.rs:35:1
+   |
+35 | type T = std::ffi::c_int;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+help: a type alias with a similar name exists
+   |
+73 -         fn new(_a: T) -> StdArrayN<N> {
+73 +         fn new(_a: T) -> StdArrayN<T> {
+   |
+
+error[E0425]: cannot find value `I` in this scope
+   --> cpp-overload-test/examples/stdcpp-array.rs:130:22
+    |
+130 |         &mut array.0[I]
+    |                      ^ not found in this scope
+
+error[E0425]: cannot find value `I` in this scope
+   --> cpp-overload-test/examples/stdcpp-array.rs:135:18
+    |
+135 |         &array.0[I]
+    |                  ^ not found in this scope
+
+error[E0107]: missing generics for struct `StdArrayN`
+  --> cpp-overload-test/examples/stdcpp-array.rs:66:26
+   |
+66 |     impl<const N: usize> StdArrayN<N> {
+   |                          ^^^^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `N`
+  --> cpp-overload-test/examples/stdcpp-array.rs:40:8
+   |
+40 | struct StdArrayN<const N: usize>([T; N]);
+   |        ^^^^^^^^^ --------------
+help: add missing generic argument
+   |
+66 |     impl<const N: usize> StdArrayN<N><N> {
+   |                                   +++
+
+Some errors have detailed explanations: E0107, E0425.
+For more information about an error, try `rustc --explain E0107`.
+error: could not compile `cpp-overload-test` (example "stdcpp-array") due to 6 previous errors
