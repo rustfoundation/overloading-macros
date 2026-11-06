@@ -12,6 +12,8 @@ pub mod stdcpp {
     pub mod forward_list;
     pub mod hash;
     pub mod stack;
+    pub mod time_point;
+    pub mod unordered_map;
     pub mod unordered_multiset;
 }
 
