@@ -7,10 +7,6 @@
 
 use cpp::cpp;
 use splat_overload::overload;
-// ### Limitations
-//
-// We want `c_bool` here, but rust only has `c_char` , so `is_empty` converts the
-// `char` back to bool .
 use std::ffi::{c_char, c_size_t, c_void};
 use std::marker::PhantomData;
 
@@ -44,11 +40,14 @@ impl StdStack {
         StdStack(stack, PhantomData)
     }
 
+    // ### Limitations
+    //
+    // We want `c_bool` here, but rust only has `c_char` , so `is_empty` converts the
+    // `char` back to bool . char is FFI safe, but rust bool is not
     fn is_empty(&self) -> bool {
         let slf = self.0 as *const c_void;
         let empty = unsafe {
             cpp!([slf as "const std::stack<int>*"] -> c_char as "char" {
-                // char is FFI safe, but rust bool is not
                 return slf->empty();
             })
         };
