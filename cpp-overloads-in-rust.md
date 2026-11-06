@@ -44,7 +44,6 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 [unordered_map]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_map.rs
 [unordered_multiset]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_multiset.rs
 
-
 [^1]: Rust and C++ iterators have different semantics, using adapter types is an ergonomic workaround.
 [^2]: `insert_after` and `splice_after` still need to be analysed.
 [^3]: The overload macro can't overload on `&self` vs `&mut self`, which limits representing some accessor overloads.
