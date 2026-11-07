@@ -54,6 +54,14 @@ impl StdStack {
         empty != 0
     }
 
+    // ### Limitations
+    //
+    // c++ `push` has two overloads; `push(const T&)` copies the values in and
+    // `push(T&&)` moves it in. They only differ by `&` and `&&`.
+    //
+    // Only one is wrapped here, as a  helper outside `overload!` .
+    // The `&`/`&&` difference is covered by copy and move constructors (`new(&StdStack)` and
+    // `new(&mut StdStack)`).
     fn push(&mut self, value: T) {
         let slf: *mut c_void = self.0;
         unsafe {

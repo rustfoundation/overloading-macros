@@ -39,6 +39,13 @@ overload! {
         /// involved. It will not be same as C++, where both functions are
         /// called top. But its how Rust normally does it, Vec has first() and first_mut()
         /// ANd Rust users would find it natural.
+        ///
+        /// The other option is like in the `forward_list::front` , take the stack as a normal
+        /// argument and not as self, like `top(this: &'static StdStack)` and
+        /// `top(this: &'static mut StdStack)` . but the thing is the macro, doesnt support
+        /// lifetimes , so the reference has to be static, and the stack has to be leaked ,
+        /// which is very awkward to use and the callers write `StdStack::top(&stack)`
+        /// and not `stack.top()`
         fn top(&self) where T:Sized {
             todo!()
         }

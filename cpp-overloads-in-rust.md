@@ -28,7 +28,7 @@ See the Limitations section below the table for more details.
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | [hash]                     | ✅           | ✅        |            |           |
-| [stack]                    | ✅           | ⚙️[^5]  | ？         |            |
+| [stack]                    | ✅           | ⚙️[^6]  | ？         |            |
 | [unordered_map]            | ✅           | 🌗⚙️[^5]  | 🌗⚙️       |          |
 | [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
 | [time_point]               | ✅           | ✅               |               | ✅           |
@@ -50,8 +50,8 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 [^2]: `insert_after` and `splice_after` still need to be analysed.
 [^3]: The overload macro can't overload on `&self` vs `&mut self`, which limits representing some accessor overloads.
 [^4]: `extract`, `merge`, and `erase_if` still need analysis. These are C++17/C++20 node handle and non-member function overloads.
-[^5]: `top` overloads differ only by `const` (`T& top()` and `const T& top() const`) , `&self` vs `&mut self` in Rust , which the overload macro can't represent. 
 [^5]: `find` and `max_load_factor` use associated functions instead of methods due to macro limitations with `&self` vs `&mut self`.
+[^6]: `top` overloads differ only by `const` (`T& top()` and `const T& top() const`) , `&self` vs `&mut self` in Rust , which the overload macro can't represent. 
 
 ## Limitations
 
