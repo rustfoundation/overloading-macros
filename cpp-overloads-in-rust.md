@@ -28,6 +28,7 @@ See the Limitations section below the table for more details.
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | [hash]                     | ✅           | ✅        |            |           |
+| [u32string_view]           | 🌗⚙️⛔[^6]   | 🌗[^7]    |          |            |
 | [unordered_map]            | ✅           | 🌗⚙️[^5]  | 🌗⚙️       |          |
 | [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
 | TODO                       | ？           | ？        |  ？        | ？         |
@@ -39,6 +40,7 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 [hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
+[u32string_view]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/u32string_view.rs
 [unordered_map]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_map.rs
 [unordered_multiset]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_multiset.rs
 
@@ -47,6 +49,8 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 [^3]: The overload macro can't overload on `&self` vs `&mut self`, which limits representing some accessor overloads.
 [^4]: `extract`, `merge`, and `erase_if` still need analysis. These are C++17/C++20 node handle and non-member function overloads.
 [^5]: `find` and `max_load_factor` use associated functions instead of methods due to macro limitations with `&self` vs `&mut self`.
+[^6]: All six constructors are wrapped, but iterator/range templates require concrete Rust types; views are limited to `'static` data, and the iterator-pair/pointer-count signature conflict requires a workaround (see example file).
+[^7]: `compare`, `find`, and `starts_with` are wrapped; C++ default arguments and null-terminated strings require ergonomic workarounds, while some equivalent overloads were skipped under the 'Equivalences & Supersets' rule.
 
 ## Limitations
 
