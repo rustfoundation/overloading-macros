@@ -1,0 +1,18 @@
+error[E0119]: conflicting implementations of trait `NewArgs<StdTimePoint>` for type `(&StdTimePoint,)`
+  --> cpp-overload-test/examples/stdcpp-time-point.rs:35:1
+   |
+35 | / overload! {
+36 | |     impl StdTimePoint {
+37 | |
+38 | |     /// Copy constructor
+...  |
+48 | | }
+   | | ^
+   | | |
+   | |_first implementation here
+   |   conflicting implementation for `(&StdTimePoint,)`
+   |
+   = note: this error originates in the macro `overload` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0119`.
+error: could not compile `cpp-overload-test` (example "stdcpp-time-point") due to 1 previous error
