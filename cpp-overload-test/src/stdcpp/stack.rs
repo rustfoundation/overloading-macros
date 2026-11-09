@@ -96,6 +96,9 @@ impl StdStack {
         }
     }
 
+    // *other is const lvalue (from &StdStack) , so only the copy constructor
+    // stack(const stack&) matched, The move constructor cant take a
+    // const object, so moving isnot possible here.
     fn copy_from(other: &StdStack) -> StdStack {
         let other = other.0 as *const c_void;
         let stack = unsafe {
@@ -106,6 +109,11 @@ impl StdStack {
         StdStack(stack, PhantomData)
     }
 
+    // std::move(*other) marks the stack as an rvalue
+    // so overload picks the move constructor stack (stack&&) instead
+    // of copy constructor
+    // Do it in one steps: a named variable will be lvalue again and get
+    // copied, other is non-const , which is what make the move possible
     fn move_from(other: &mut StdStack) -> StdStack {
         let other = other.0;
         let stack = unsafe {

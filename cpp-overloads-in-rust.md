@@ -51,7 +51,7 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 [^3]: The overload macro can't overload on `&self` vs `&mut self`, which limits representing some accessor overloads.
 [^4]: `extract`, `merge`, and `erase_if` still need analysis. These are C++17/C++20 node handle and non-member function overloads.
 [^5]: `find` and `max_load_factor` use associated functions instead of methods due to macro limitations with `&self` vs `&mut self`.
-[^6]: `top` overloads differ only by `const` (`T& top()` and `const T& top() const`) , `&self` vs `&mut self` in Rust , which the overload macro can't represent. 
+[^6]: `top` overloads differ only by `const` (`T& top()` and `const T& top() const`) , `&self` vs `&mut self` in Rust, which the overload macro can't represent.
 
 ## Limitations
 
