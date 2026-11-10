@@ -224,23 +224,29 @@ impl StdForwardList {
         StdForwardList(list, PhantomData)
     }
 
+    // *other is const lvalue (from &StdForwardList) , so only the copy constructor
+    // forward_list(const forward_list&) matches, The move constructor can't take a
+    // const object, so moving is not possible here.
     fn copy_from(other: &StdForwardList) -> StdForwardList {
         let other = other.0 as *const c_void;
         let list = unsafe {
             cpp!([other as "const std::forward_list<int>*"] -> *mut c_void as "std::forward_list<int>*" {
-                const std::forward_list<int> other_ = *other;
-                return new std::forward_list<int>(other_);
+                return new std::forward_list<int>(*other);
             })
         };
         StdForwardList(list, PhantomData)
     }
 
+    // std::move(*other) makes the list as an rvalue
+    // so overload picks the move constructor forward_list(forward_list&&) instead
+    // of copy constructor
+    // Doing it in one step: a named variable will be lvalue again and get
+    // copied, other is non-const , which is what make the move possible
     fn move_from(other: &mut StdForwardList) -> StdForwardList {
         let other: *mut c_void = other.0;
         let list = unsafe {
             cpp!([other as "std::forward_list<int>*"] -> *mut c_void as "std::forward_list<int>*" {
-                std::forward_list<int> other_ = std::move(*other);
-                return new std::forward_list<int>(other_);
+                return new std::forward_list<int>(std::move(*other));
             })
         };
         StdForwardList(list, PhantomData)
