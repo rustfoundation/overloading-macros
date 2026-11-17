@@ -28,6 +28,7 @@ See the Limitations section below the table for more details.
 | *Template Classes*         | Constructors | Accessors | Modifiers  | Transforms |
 | [forward_list]             | ✅           | 🌗⚙️[^1]  | 🌗⚙️？[^2] | ✅         |
 | [hash]                     | ✅           | ✅        |            |           |
+| [stack]                    | ✅           | ⚙️[^6]  | ？         |            |
 | [unordered_map]            | ✅           | 🌗⚙️[^5]  | 🌗⚙️       |          |
 | [unordered_multiset]       | ✅           | ✅⚙️[^3]  | ✅         | ？[^4]     |
 | [time_point]               | ✅           | ✅               |               | ✅           |
@@ -40,6 +41,7 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 
 [forward_list]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/forward_list.rs
 [hash]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/hash.rs
+[stack]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/stack.rs
 [time_point]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/time_point.rs
 [unordered_map]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_map.rs
 [unordered_multiset]: https://github.com/rustfoundation/overloading-macros/blob/main/cpp-overload-test/src/stdcpp/unordered_multiset.rs
@@ -49,6 +51,7 @@ Transforms: Rearrange the items in a list class, called as `instance->sort(...)`
 [^3]: The overload macro can't overload on `&self` vs `&mut self`, which limits representing some accessor overloads.
 [^4]: `extract`, `merge`, and `erase_if` still need analysis. These are C++17/C++20 node handle and non-member function overloads.
 [^5]: `find` and `max_load_factor` use associated functions instead of methods due to macro limitations with `&self` vs `&mut self`.
+[^6]: `top` overloads differ only by `const` (`T& top()` and `const T& top() const`) , `&self` vs `&mut self` in Rust, which the overload macro can't represent.
 
 ## Limitations
 
