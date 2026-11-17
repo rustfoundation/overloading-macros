@@ -101,6 +101,38 @@ fn check_overload_receiver_kind(functions: &[ItemFn]) -> ReceiverKind {
     first_receiver
 }
 
+/// Checks that all the overloaded functions are either `unsafe` or safe, and returns the `unsafe`
+/// qualifier if they have one.
+///
+/// All the overloads are dispatched through a single function, which can only be safe or unsafe.
+/// A safe dispatch function would let safe code call the unsafe overloads.
+fn check_overload_unsafety(functions: &[ItemFn]) -> Option<Token![unsafe]> {
+    let first_unsafety = functions[0].sig.unsafety;
+    for func in functions {
+        if func.sig.unsafety.is_some() != first_unsafety.is_some() {
+            panic!(
+                "all overloads must have the same safety (all `unsafe fn`, or all `fn`), \
+                got a mix of safe and unsafe overloads for {}",
+                func.sig.ident
+            );
+        }
+    }
+    first_unsafety
+}
+
+/// Wraps `call` in an `unsafe` block if the overloads are unsafe.
+/// Safe overloads are left unchanged, to avoid `unused_unsafe` warnings.
+fn wrap_unsafe_call(
+    unsafety: Option<Token![unsafe]>,
+    call: proc_macro2::TokenStream,
+) -> proc_macro2::TokenStream {
+    if unsafety.is_some() {
+        quote! { unsafe { #call } }
+    } else {
+        call
+    }
+}
+
 impl Parse for OverloadInput {
     /// Parse the input list of functions into different function kind variants.
     fn parse(input: ParseStream) -> Result<Self> {
@@ -218,6 +250,10 @@ fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
     let fn_name = check_overload_names(&functions);
     let trait_name = trait_name_for(fn_name);
 
+    // Check all the overloads have the same safety, if not, panic.
+    let unsafety = check_overload_unsafety(&functions);
+    let dispatch_call = wrap_unsafe_call(unsafety, quote! { args.call() });
+
     let mut impls = Vec::new();
     for func in &functions {
         let (arg_types, arg_names, arg_indices) = collect_args(func);
@@ -228,7 +264,7 @@ fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
         impls.push(quote! {
             impl #trait_name for #tuple_ty {
                 type Output = #output_ty;
-                fn call(self) -> Self::Output {
+                #unsafety fn call(self) -> Self::Output {
                     #(let #arg_names = #arg_indices;)*
                     #block
                 }
@@ -245,13 +281,13 @@ fn generate_free_functions(functions: Vec<ItemFn>) -> TokenStream {
         )]
         trait #trait_name: std::marker::Tuple {
             type Output;
-            fn call(self) -> Self::Output;
+            #unsafety fn call(self) -> Self::Output;
         }
 
         #(#impls)*
 
-        fn #fn_name<T: #trait_name>(#[rustc_splat] args: T) -> T::Output {
-            args.call()
+        #unsafety fn #fn_name<T: #trait_name>(#[rustc_splat] args: T) -> T::Output {
+            #dispatch_call
         }
     };
 
@@ -313,6 +349,9 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
     // Check all the receiver kinds match, if not, panic.
     let receiver_kind = check_overload_receiver_kind(&functions);
 
+    // Check all the overloads have the same safety, if not, panic.
+    let unsafety = check_overload_unsafety(&functions);
+
     // Generate fragments used to generate the trait impmentation.
     // The generic type used for the `this` argument pseudo-receiver.
     let this_generic_ty = match receiver_kind {
@@ -354,18 +393,24 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         // The hidden impl method name for the current function.
         let hidden_name = quote::format_ident!("__{}_impl_{}", fn_name, i);
         hidden_methods.push(quote! {
-            fn #hidden_name(#func_receiver #(#arg_names: #arg_types),*) -> #output_ty {
+            #unsafety fn #hidden_name(#func_receiver #(#arg_names: #arg_types),*) -> #output_ty {
                 #block
             }
         });
+
+        // The call to the hidden impl method, which is unsafe if the overloads are unsafe.
+        let hidden_call = wrap_unsafe_call(
+            unsafety,
+            quote! { #caller_receiver #hidden_name(#(#arg_names),*) },
+        );
 
         // The full trait impl for this specific function overload.
         impls.push(quote! {
             impl #trait_name<#self_ty> for #tuple_ty {
                 type Output = #output_ty;
-                fn call(self #this_concrete_ty) -> Self::Output {
+                #unsafety fn call(self #this_concrete_ty) -> Self::Output {
                     #(let #arg_names = #arg_indices;)*
-                    #caller_receiver #hidden_name(#(#arg_names),*)
+                    #hidden_call
                 }
             }
         });
@@ -377,6 +422,7 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         Some(FnArg::Receiver(r)) => (quote! { #r }, quote! { , }, quote! { self }),
         _ => (quote! {}, quote! {}, quote! {}),
     };
+    let dispatch_call = wrap_unsafe_call(unsafety, quote! { args.call(#self_arg) });
 
     let generated = quote! {
         #[diagnostic::on_unimplemented(
@@ -387,7 +433,7 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         )]
         trait #trait_name<R>: std::marker::Tuple {
             type Output;
-            fn call(self #this_generic_ty) -> Self::Output;
+            #unsafety fn call(self #this_generic_ty) -> Self::Output;
         }
 
         #(#impls)*
@@ -395,8 +441,8 @@ fn generate_methods(self_ty: syn::Ident, functions: Vec<ItemFn>) -> TokenStream 
         impl #self_ty {
             #(#hidden_methods)*
 
-            fn #fn_name<T: #trait_name<Self>>(#receiver #receiver_comma #[rustc_splat] args: T) -> T::Output {
-                args.call(#self_arg)
+            #unsafety fn #fn_name<T: #trait_name<Self>>(#receiver #receiver_comma #[rustc_splat] args: T) -> T::Output {
+                #dispatch_call
             }
         }
     };
