@@ -1,0 +1,14 @@
+error: proc macro panicked
+  --> cpp-overload-test/examples/stdcpp-stack.rs:22:1
+   |
+22 | / overload! {
+23 | |     impl StdStack {
+24 | |         /// ### Incompatibilities
+25 | |         ///
+...  |
+57 | | }
+   | |_^
+   |
+   = help: message: all overloads must have the same receiver kind (&self, &mut self, self, or no receiver), got top: &self and top: &mut self
+
+error: could not compile `cpp-overload-test` (example "stdcpp-stack") due to 1 previous error
