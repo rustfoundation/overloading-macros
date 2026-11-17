@@ -106,6 +106,10 @@ fn check_overload_receiver_kind(functions: &[ItemFn]) -> ReceiverKind {
 ///
 /// All the overloads are dispatched through a single function, which can only be safe or unsafe.
 /// A safe dispatch function would let safe code call the unsafe overloads.
+///
+/// FIXME: mixed safe and unsafe overloads can't be supported using the trait-on-receiver-wrapper
+/// strategy, because trait method impls can't differ in safety. An ergonomic solution will likely
+/// require compiler support.
 fn check_overload_unsafety(functions: &[ItemFn]) -> Option<Token![unsafe]> {
     let first_unsafety = functions[0].sig.unsafety;
     for func in functions {
